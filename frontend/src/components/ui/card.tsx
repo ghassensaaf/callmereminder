@@ -22,9 +22,9 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
         ref
     ) => {
         const variants = {
-            default: "bg-white border border-surface-200 shadow-sm",
-            elevated: "bg-white shadow-lg shadow-surface-900/10",
-            bordered: "bg-white border-2 border-surface-200",
+            default: "bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 shadow-sm dark:shadow-black/20",
+            elevated: "bg-white dark:bg-surface-900 shadow-lg shadow-surface-900/10 dark:shadow-black/30",
+            bordered: "bg-white dark:bg-surface-900 border-2 border-surface-200 dark:border-surface-700",
             glass: "glass",
         };
 
@@ -74,7 +74,7 @@ const CardTitle = forwardRef<
     <h3
         ref={ref}
         className={cn(
-            "text-lg font-semibold leading-none tracking-tight text-surface-900",
+            "text-lg font-semibold leading-none tracking-tight text-surface-900 dark:text-surface-50",
             className
         )}
         {...props}
@@ -89,7 +89,7 @@ const CardDescription = forwardRef<
 >(({ className, ...props }, ref) => (
     <p
         ref={ref}
-        className={cn("text-sm text-surface-500", className)}
+        className={cn("text-sm text-surface-500 dark:text-surface-400", className)}
         {...props}
     />
 ));

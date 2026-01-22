@@ -8,13 +8,19 @@
     --foreground: 15 23 42;
   }
 
+  .dark {
+    --background: 15 23 42;
+    --foreground: 248 250 252;
+  }
+
   html {
     @apply antialiased scroll-smooth;
   }
 
   body {
-    @apply bg-surface-50 text-surface-900 min-h-screen;
+    @apply bg-surface-50 dark:bg-surface-950 text-surface-900 dark:text-surface-50 min-h-screen;
     font-feature-settings: "rlig" 1, "calt" 1;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   /* Custom scrollbar */
@@ -23,23 +29,23 @@
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-surface-100 rounded-full;
+    @apply bg-surface-100 dark:bg-surface-800 rounded-full;
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-surface-300 rounded-full hover:bg-surface-400 transition-colors;
+    @apply bg-surface-300 dark:bg-surface-600 rounded-full hover:bg-surface-400 dark:hover:bg-surface-500 transition-colors;
   }
 
   /* Selection */
   ::selection {
-    @apply bg-primary-500/20 text-primary-900;
+    @apply bg-primary-500/20 text-primary-900 dark:text-primary-100;
   }
 }
 
 @layer components {
   /* Glass morphism effect */
   .glass {
-    @apply backdrop-blur-xl bg-white/80 border border-surface-200/50 shadow-lg shadow-surface-900/5;
+    @apply backdrop-blur-xl bg-white/80 dark:bg-surface-900/80 border border-surface-200/50 dark:border-surface-700/50 shadow-lg shadow-surface-900/5 dark:shadow-black/20;
   }
 
   .glass-dark {
@@ -48,17 +54,17 @@
 
   /* Focus ring */
   .focus-ring {
-    @apply focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-2 focus:ring-offset-white transition-shadow;
+    @apply focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-surface-900 transition-shadow;
   }
 
   /* Card hover effect */
   .card-hover {
-    @apply transition-all duration-300 hover:shadow-xl hover:shadow-surface-900/10 hover:-translate-y-0.5;
+    @apply transition-all duration-300 hover:shadow-xl hover:shadow-surface-900/10 dark:hover:shadow-black/30 hover:-translate-y-0.5;
   }
 
   /* Gradient text */
   .gradient-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-primary-400;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-primary-400 dark:from-primary-400 dark:to-primary-300;
   }
 
   /* Shimmer loading effect */
@@ -72,6 +78,16 @@
     );
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
+  }
+
+  .dark .shimmer {
+    background: linear-gradient(
+      90deg,
+      theme('colors.surface.800') 0%,
+      theme('colors.surface.700') 50%,
+      theme('colors.surface.800') 100%
+    );
+    background-size: 200% 100%;
   }
 
   /* Pulse dot animation */
@@ -131,13 +147,22 @@
   padding: 0 12px !important;
   border: none !important;
   border-right: 1px solid #e2e8f0 !important;
-  border-radius: 0.75rem 0 0 0.75rem !important; /* Rounded left corners to match input */
+  border-radius: 0.75rem 0 0 0.75rem !important;
   background-color: #f8fafc !important;
   transition: background-color 0.15s !important;
 }
 
+.dark .phone-input-container .react-international-phone-country-selector-button {
+  border-right-color: #334155 !important;
+  background-color: #1e293b !important;
+}
+
 .phone-input-container .react-international-phone-country-selector-button:hover {
   background-color: #f1f5f9 !important;
+}
+
+.dark .phone-input-container .react-international-phone-country-selector-button:hover {
+  background-color: #334155 !important;
 }
 
 .phone-input-container .react-international-phone-country-selector-button__button-content {
@@ -162,9 +187,9 @@
 
 .phone-input-container .react-international-phone-input {
   @apply !flex-1 !border-0 !h-auto !py-2.5 !px-4 !pr-12;
-  @apply !text-sm !text-surface-900 !bg-transparent;
+  @apply !text-sm !text-surface-900 dark:!text-surface-100 !bg-transparent;
   @apply !outline-none focus:!outline-none focus:!ring-0;
-  @apply placeholder:!text-surface-400;
+  @apply placeholder:!text-surface-400 dark:placeholder:!text-surface-500;
   min-height: 44px !important;
 }
 
@@ -183,6 +208,12 @@
   padding: 0.25rem 0 !important;
 }
 
+.dark .react-international-phone-country-selector-dropdown {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.3), 0 8px 10px -6px rgb(0 0 0 / 0.3) !important;
+}
+
 .react-international-phone-country-selector-dropdown__list-item {
   display: flex !important;
   align-items: center !important;
@@ -197,9 +228,18 @@
   background-color: #f8fafc !important;
 }
 
+.dark .react-international-phone-country-selector-dropdown__list-item:hover {
+  background-color: #334155 !important;
+}
+
 .react-international-phone-country-selector-dropdown__list-item--selected,
 .react-international-phone-country-selector-dropdown__list-item--focused {
   background-color: #eef8ff !important;
+}
+
+.dark .react-international-phone-country-selector-dropdown__list-item--selected,
+.dark .react-international-phone-country-selector-dropdown__list-item--focused {
+  background-color: #1e3a5f !important;
 }
 
 .react-international-phone-country-selector-dropdown__list-item-flag-emoji {
@@ -218,11 +258,19 @@
   white-space: nowrap !important;
 }
 
+.dark .react-international-phone-country-selector-dropdown__list-item-country-name {
+  color: #e2e8f0 !important;
+}
+
 .react-international-phone-country-selector-dropdown__list-item-dial-code {
   color: #94a3b8 !important;
   font-size: 0.75rem !important;
   font-family: ui-monospace, monospace !important;
   flex-shrink: 0 !important;
+}
+
+.dark .react-international-phone-country-selector-dropdown__list-item-dial-code {
+  color: #64748b !important;
 }
 
 /* Dial code preview next to country selector */
@@ -240,6 +288,11 @@
   z-index: 1 !important;
 }
 
+.dark .react-international-phone-country-selector-dropdown__search-input-container {
+  border-bottom-color: #334155 !important;
+  background: #1e293b !important;
+}
+
 .react-international-phone-country-selector-dropdown__search-input {
   width: 100% !important;
   padding: 0.5rem 0.75rem !important;
@@ -248,6 +301,12 @@
   background-color: #f8fafc !important;
   border: none !important;
   outline: none !important;
+  color: #0f172a !important;
+}
+
+.dark .react-international-phone-country-selector-dropdown__search-input {
+  background-color: #0f172a !important;
+  color: #f1f5f9 !important;
 }
 
 .react-international-phone-country-selector-dropdown__search-input:focus {

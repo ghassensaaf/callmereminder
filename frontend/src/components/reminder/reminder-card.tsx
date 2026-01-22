@@ -142,18 +142,18 @@ export function ReminderCard({ reminder, index = 0 }: ReminderCardProps) {
           padding="none"
           className={cn(
             "group transition-all duration-300",
-            "hover:shadow-lg hover:shadow-surface-900/5 hover:-translate-y-0.5",
-            reminder.status === "failed" && "border-danger-200/50"
+            "hover:shadow-lg hover:shadow-surface-900/5 dark:hover:shadow-black/30 hover:-translate-y-0.5",
+            reminder.status === "failed" && "border-danger-200/50 dark:border-danger-500/30"
           )}
         >
           <div className="p-5">
             {/* Header */}
             <div className="flex items-start justify-between gap-4 mb-4">
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-surface-900 truncate mb-1">
+                <h3 className="font-semibold text-surface-900 dark:text-surface-50 truncate mb-1">
                   {reminder.title}
                 </h3>
-                <div className="flex items-center gap-2 text-sm text-surface-500">
+                <div className="flex items-center gap-2 text-sm text-surface-500 dark:text-surface-400">
                   <Phone className="h-3.5 w-3.5" />
                   <span className="font-mono">
                     {maskPhoneNumber(reminder.phone_number)}
@@ -171,13 +171,13 @@ export function ReminderCard({ reminder, index = 0 }: ReminderCardProps) {
             </div>
 
             {/* Message preview */}
-            <p className="text-sm text-surface-600 line-clamp-2 mb-4">
+            <p className="text-sm text-surface-600 dark:text-surface-300 line-clamp-2 mb-4">
               {reminder.message}
             </p>
 
             {/* Time info */}
             <div className="flex items-center gap-4 text-xs">
-              <div className="flex items-center gap-1.5 text-surface-500">
+              <div className="flex items-center gap-1.5 text-surface-500 dark:text-surface-400">
                 <Calendar className="h-3.5 w-3.5" />
                 <span>{formatDateTime(reminder.scheduled_at, reminder.timezone)}</span>
               </div>
@@ -185,7 +185,7 @@ export function ReminderCard({ reminder, index = 0 }: ReminderCardProps) {
                 <div
                   className={cn(
                     "flex items-center gap-1.5 font-medium",
-                    isPastDue ? "text-danger-500" : "text-primary-600"
+                    isPastDue ? "text-danger-500" : "text-primary-600 dark:text-primary-400"
                   )}
                 >
                   <Timer className="h-3.5 w-3.5" />
@@ -196,10 +196,10 @@ export function ReminderCard({ reminder, index = 0 }: ReminderCardProps) {
 
             {/* Error message if failed */}
             {reminder.status === "failed" && reminder.error_message && (
-              <div className="mt-3 p-3 bg-danger-50 rounded-lg border border-danger-100">
+              <div className="mt-3 p-3 bg-danger-50 dark:bg-danger-500/10 rounded-lg border border-danger-100 dark:border-danger-500/20">
                 <div className="flex items-start gap-2">
                   <AlertCircle className="h-4 w-4 text-danger-500 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-danger-700">
+                  <p className="text-sm text-danger-700 dark:text-danger-500">
                     {formatErrorMessage(reminder.error_message)}
                   </p>
                 </div>
@@ -208,7 +208,7 @@ export function ReminderCard({ reminder, index = 0 }: ReminderCardProps) {
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-1 px-5 py-3 bg-surface-50/50 border-t border-surface-100">
+          <div className="flex items-center gap-1 px-5 py-3 bg-surface-50/50 dark:bg-surface-800/50 border-t border-surface-100 dark:border-surface-800">
             {isEditable && (
               <>
                 <Button
@@ -224,7 +224,7 @@ export function ReminderCard({ reminder, index = 0 }: ReminderCardProps) {
                   size="sm"
                   onClick={() => setIsDeleteConfirmOpen(true)}
                   leftIcon={<Trash2 className="h-3.5 w-3.5" />}
-                  className="text-danger-600 hover:text-danger-700 hover:bg-danger-50"
+                  className="text-danger-600 hover:text-danger-700 dark:text-danger-500 dark:hover:text-danger-400 hover:bg-danger-50 dark:hover:bg-danger-500/10"
                 >
                   Delete
                 </Button>
@@ -236,7 +236,7 @@ export function ReminderCard({ reminder, index = 0 }: ReminderCardProps) {
                 size="sm"
                 onClick={() => setIsDeleteConfirmOpen(true)}
                 leftIcon={<Trash2 className="h-3.5 w-3.5" />}
-                className="text-danger-600 hover:text-danger-700 hover:bg-danger-50"
+                className="text-danger-600 hover:text-danger-700 dark:text-danger-500 dark:hover:text-danger-400 hover:bg-danger-50 dark:hover:bg-danger-500/10"
               >
                 Delete
               </Button>
@@ -268,7 +268,7 @@ export function ReminderCard({ reminder, index = 0 }: ReminderCardProps) {
         size="sm"
       >
         <div className="space-y-4">
-          <p className="text-surface-600">
+          <p className="text-surface-600 dark:text-surface-300">
             Are you sure you want to delete &ldquo;{reminder.title}&rdquo;? This
             action cannot be undone.
           </p>

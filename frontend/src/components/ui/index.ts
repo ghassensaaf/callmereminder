@@ -8,3 +8,4 @@ export { Badge } from "./badge";
 export { Modal } from "./modal";
 export { Skeleton, SkeletonCard, SkeletonForm } from "./skeleton";
 export { EmptyState } from "./empty-state";
+export { ThemeToggle } from "./theme-toggle";

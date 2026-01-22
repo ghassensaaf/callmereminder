@@ -5,13 +5,13 @@ import { cn } from "@/lib/utils";
 
 export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   variant?:
-    | "default"
-    | "primary"
-    | "success"
-    | "warning"
-    | "danger"
-    | "info"
-    | "outline";
+  | "default"
+  | "primary"
+  | "success"
+  | "warning"
+  | "danger"
+  | "info"
+  | "outline";
   size?: "sm" | "md" | "lg";
   dot?: boolean;
   pulse?: boolean;
@@ -31,16 +31,16 @@ const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
     ref
   ) => {
     const variants = {
-      default: "bg-surface-100 text-surface-700 border-surface-200",
+      default: "bg-surface-100 dark:bg-surface-800 text-surface-700 dark:text-surface-300 border-surface-200 dark:border-surface-700",
       primary:
-        "bg-primary-50 text-primary-700 border-primary-200",
+        "bg-primary-50 dark:bg-primary-950/50 text-primary-700 dark:text-primary-300 border-primary-200 dark:border-primary-800",
       success:
-        "bg-success-50 text-success-600 border-success-100",
+        "bg-success-50 dark:bg-success-500/10 text-success-600 dark:text-success-500 border-success-100 dark:border-success-500/20",
       warning:
-        "bg-warning-50 text-warning-600 border-warning-100",
-      danger: "bg-danger-50 text-danger-600 border-danger-100",
-      info: "bg-primary-50 text-primary-600 border-primary-100",
-      outline: "bg-transparent border-surface-300 text-surface-600",
+        "bg-warning-50 dark:bg-warning-500/10 text-warning-600 dark:text-warning-500 border-warning-100 dark:border-warning-500/20",
+      danger: "bg-danger-50 dark:bg-danger-500/10 text-danger-600 dark:text-danger-500 border-danger-100 dark:border-danger-500/20",
+      info: "bg-primary-50 dark:bg-primary-950/50 text-primary-600 dark:text-primary-400 border-primary-100 dark:border-primary-800",
+      outline: "bg-transparent border-surface-300 dark:border-surface-600 text-surface-600 dark:text-surface-400",
     };
 
     const dotColors = {

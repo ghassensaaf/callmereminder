@@ -52,7 +52,7 @@ export function Modal({
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
                 transition={{ duration: 0.2, ease: "easeOut" }}
                 className={cn(
-                  "w-full bg-white shadow-2xl overflow-visible",
+                  "w-full bg-white dark:bg-surface-900 shadow-2xl dark:shadow-black/40 overflow-visible",
                   "rounded-t-2xl sm:rounded-2xl",
                   "max-h-[90vh] sm:max-h-[85vh]",
                   "flex flex-col",
@@ -65,19 +65,19 @@ export function Modal({
                   <div className="flex items-start justify-between p-4 sm:p-6 pb-0 flex-shrink-0">
                     <div className="pr-4">
                       {title && (
-                        <h2 className="text-base sm:text-lg font-semibold text-surface-900">
+                        <h2 className="text-base sm:text-lg font-semibold text-surface-900 dark:text-surface-50">
                           {title}
                         </h2>
                       )}
                       {description && (
-                        <p className="mt-1 text-xs sm:text-sm text-surface-500">
+                        <p className="mt-1 text-xs sm:text-sm text-surface-500 dark:text-surface-400">
                           {description}
                         </p>
                       )}
                     </div>
                     <button
                       onClick={onClose}
-                      className="p-2 -m-2 text-surface-400 hover:text-surface-600 hover:bg-surface-100 rounded-lg transition-colors flex-shrink-0"
+                      className="p-2 -m-2 text-surface-400 dark:text-surface-500 hover:text-surface-600 dark:hover:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 rounded-lg transition-colors flex-shrink-0"
                     >
                       <X className="h-5 w-5" />
                     </button>

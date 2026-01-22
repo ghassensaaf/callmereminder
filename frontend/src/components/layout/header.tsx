@@ -2,10 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Bell, Plus, Menu, X, Phone } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Plus, Phone } from "lucide-react";
 
-import { Button } from "@/components/ui";
+import { Button, ThemeToggle } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
 interface HeaderProps {
@@ -13,12 +12,10 @@ interface HeaderProps {
 }
 
 export function Header({ onCreateClick }: HeaderProps) {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
   return (
     <header className="sticky top-0 z-40 w-full">
       {/* Backdrop blur */}
-      <div className="absolute inset-0 bg-white/80 backdrop-blur-xl border-b border-surface-200/50" />
+      <div className="absolute inset-0 bg-white/80 dark:bg-surface-950/80 backdrop-blur-xl border-b border-surface-200/50 dark:border-surface-800/50" />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
@@ -35,10 +32,10 @@ export function Header({ onCreateClick }: HeaderProps) {
               </span>
             </div>
             <div>
-              <span className="font-display font-bold text-lg text-surface-900">
+              <span className="font-display font-bold text-lg text-surface-900 dark:text-surface-50">
                 CallMe
               </span>
-              <span className="hidden sm:inline text-surface-500 font-medium ml-1">
+              <span className="hidden sm:inline text-surface-500 dark:text-surface-400 font-medium ml-1">
                 Reminder
               </span>
             </div>
@@ -53,6 +50,7 @@ export function Header({ onCreateClick }: HeaderProps) {
 
           {/* Actions */}
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             <Button
               onClick={onCreateClick}
               leftIcon={<Plus className="h-4 w-4" />}
@@ -88,8 +86,8 @@ function NavLink({ href, children, active }: NavLinkProps) {
       className={cn(
         "px-4 py-2 text-sm font-medium rounded-lg transition-colors",
         active
-          ? "text-primary-600 bg-primary-50"
-          : "text-surface-600 hover:text-surface-900 hover:bg-surface-100"
+          ? "text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-950/50"
+          : "text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-100 hover:bg-surface-100 dark:hover:bg-surface-800"
       )}
     >
       {children}

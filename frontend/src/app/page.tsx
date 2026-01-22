@@ -28,10 +28,10 @@ export default function DashboardPage() {
           transition={{ duration: 0.5 }}
           className="mb-8"
         >
-          <h1 className="text-3xl sm:text-4xl font-display font-bold text-surface-900 mb-2">
+          <h1 className="text-3xl sm:text-4xl font-display font-bold text-surface-900 dark:text-surface-50 mb-2">
             Your Reminders
           </h1>
-          <p className="text-surface-500 text-lg">
+          <p className="text-surface-500 dark:text-surface-400 text-lg">
             Stay on top of your schedule with voice call reminders
           </p>
         </motion.div>

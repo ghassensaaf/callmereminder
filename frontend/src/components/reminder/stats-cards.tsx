@@ -25,14 +25,14 @@ function StatCard({ label, value, icon, color, bgColor, delay = 0 }: StatCardPro
       transition={{ duration: 0.4, delay }}
       className={cn(
         "relative overflow-hidden rounded-2xl p-5",
-        "bg-white border border-surface-200",
-        "shadow-sm hover:shadow-md transition-shadow duration-300"
+        "bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800",
+        "shadow-sm hover:shadow-md dark:shadow-black/20 transition-shadow duration-300"
       )}
     >
       {/* Background decoration */}
       <div
         className={cn(
-          "absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2",
+          "absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 opacity-60 dark:opacity-30",
           bgColor
         )}
       />
@@ -47,8 +47,8 @@ function StatCard({ label, value, icon, color, bgColor, delay = 0 }: StatCardPro
           <div className={color}>{icon}</div>
         </div>
         <div>
-          <p className="text-2xl font-bold text-surface-900">{value}</p>
-          <p className="text-sm text-surface-500 font-medium">{label}</p>
+          <p className="text-2xl font-bold text-surface-900 dark:text-surface-50">{value}</p>
+          <p className="text-sm text-surface-500 dark:text-surface-400 font-medium">{label}</p>
         </div>
       </div>
     </motion.div>
@@ -57,7 +57,7 @@ function StatCard({ label, value, icon, color, bgColor, delay = 0 }: StatCardPro
 
 function StatCardSkeleton() {
   return (
-    <div className="rounded-2xl p-5 bg-white border border-surface-200">
+    <div className="rounded-2xl p-5 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800">
       <div className="flex items-center gap-4">
         <Skeleton className="w-12 h-12 rounded-xl" />
         <div className="space-y-2">
@@ -94,32 +94,32 @@ export function StatsCards() {
         label="Total"
         value={stats.total}
         icon={<Bell className="h-5 w-5" />}
-        color="text-surface-600"
-        bgColor="bg-surface-100"
+        color="text-surface-600 dark:text-surface-300"
+        bgColor="bg-surface-100 dark:bg-surface-800"
         delay={0}
       />
       <StatCard
         label="Scheduled"
         value={stats.scheduled}
         icon={<Clock className="h-5 w-5" />}
-        color="text-primary-600"
-        bgColor="bg-primary-50"
+        color="text-primary-600 dark:text-primary-400"
+        bgColor="bg-primary-50 dark:bg-primary-950/50"
         delay={0.1}
       />
       <StatCard
         label="Completed"
         value={stats.completed}
         icon={<CheckCircle className="h-5 w-5" />}
-        color="text-success-600"
-        bgColor="bg-success-50"
+        color="text-success-600 dark:text-success-500"
+        bgColor="bg-success-50 dark:bg-success-500/10"
         delay={0.2}
       />
       <StatCard
         label="Failed"
         value={stats.failed}
         icon={<AlertCircle className="h-5 w-5" />}
-        color="text-danger-600"
-        bgColor="bg-danger-50"
+        color="text-danger-600 dark:text-danger-500"
+        bgColor="bg-danger-50 dark:bg-danger-500/10"
         delay={0.3}
       />
     </div>

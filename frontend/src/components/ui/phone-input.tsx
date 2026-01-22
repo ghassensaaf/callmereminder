@@ -91,20 +91,20 @@ const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
         return (
             <div className="w-full">
                 {label && (
-                    <label className="block text-sm font-medium text-surface-700 mb-1.5">
+                    <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
                         {label}
                     </label>
                 )}
 
                 <div
                     className={cn(
-                        "phone-input-container relative rounded-xl border bg-white transition-all duration-200",
+                        "phone-input-container relative rounded-xl border bg-white dark:bg-surface-900 transition-all duration-200",
                         error
                             ? "border-danger-500 focus-within:ring-2 focus-within:ring-danger-500/30"
                             : isFocused
-                                ? "border-primary-500 ring-2 ring-primary-500/30"
-                                : "border-surface-200 hover:border-surface-300",
-                        disabled && "bg-surface-50 cursor-not-allowed opacity-60"
+                                ? "border-primary-500 dark:border-primary-400 ring-2 ring-primary-500/30 dark:ring-primary-400/30"
+                                : "border-surface-200 dark:border-surface-700 hover:border-surface-300 dark:hover:border-surface-600",
+                        disabled && "bg-surface-50 dark:bg-surface-800 cursor-not-allowed opacity-60"
                     )}
                 >
                     <ReactPhoneInput
@@ -163,8 +163,8 @@ const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
                                 className={cn(
                                     "flex items-center justify-center w-6 h-6 rounded-full",
                                     validation.isValid
-                                        ? "bg-success-100 text-success-600"
-                                        : "bg-surface-100 text-surface-400"
+                                        ? "bg-success-100 dark:bg-success-500/20 text-success-600 dark:text-success-500"
+                                        : "bg-surface-100 dark:bg-surface-800 text-surface-400 dark:text-surface-500"
                                 )}
                             >
                                 {validation.isValid ? (
@@ -182,7 +182,7 @@ const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
                     <p
                         className={cn(
                             "mt-1.5 text-xs",
-                            error ? "text-danger-500" : "text-surface-500"
+                            error ? "text-danger-500" : "text-surface-500 dark:text-surface-400"
                         )}
                     >
                         {error || hint}

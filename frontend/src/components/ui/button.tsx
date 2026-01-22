@@ -34,13 +34,13 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       primary:
         "bg-gradient-to-r from-primary-600 to-primary-500 text-white hover:from-primary-700 hover:to-primary-600 shadow-lg shadow-primary-500/25 hover:shadow-xl hover:shadow-primary-500/30",
       secondary:
-        "bg-surface-100 text-surface-700 hover:bg-surface-200 hover:text-surface-900",
+        "bg-surface-100 dark:bg-surface-800 text-surface-700 dark:text-surface-200 hover:bg-surface-200 dark:hover:bg-surface-700 hover:text-surface-900 dark:hover:text-surface-50",
       ghost:
-        "text-surface-600 hover:bg-surface-100 hover:text-surface-900",
+        "text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-surface-900 dark:hover:text-surface-50",
       danger:
         "bg-gradient-to-r from-danger-600 to-danger-500 text-white hover:from-danger-700 hover:to-danger-600 shadow-lg shadow-danger-500/25",
       outline:
-        "border-2 border-surface-200 text-surface-700 hover:border-primary-500 hover:text-primary-600 hover:bg-primary-50",
+        "border-2 border-surface-200 dark:border-surface-700 text-surface-700 dark:text-surface-200 hover:border-primary-500 dark:hover:border-primary-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-950/50",
     };
 
     const sizes = {
