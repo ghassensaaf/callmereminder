@@ -264,7 +264,8 @@ services:
 
 ## 📄 License
 
-MIT
+This project is released under a **Proprietary License**.  
+See the `LICENSE` file for full terms.
 
 ---
 
