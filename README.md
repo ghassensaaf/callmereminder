@@ -15,6 +15,8 @@ A modern, full-stack reminder application that calls you with voice reminders at
 - **⏰ Real-time Countdown**: See time remaining for scheduled reminders
 - **🔄 Auto-refresh**: Dashboard updates automatically every 10 seconds
 - **📱 Fully Responsive**: Works perfectly on mobile, tablet, and desktop
+- **🌍 International Phone Input**: Premium phone number input with country selector and validation
+- **🌐 Timezone Support**: Auto-detects user timezone with manual override option
 
 ## 🏗️ Architecture
 
@@ -54,8 +56,8 @@ callMeReminder/
 ### 1. Clone the Repository
 
 ```bash
-git clone <your-repo-url>
-cd callMeReminder
+git clone https://github.com/ghassensaaf/callmereminder.git
+cd callmereminder
 ```
 
 ### 2. Backend Setup
@@ -77,7 +79,8 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 # Create .env file
-# Copy env.example.txt to .env and fill in your values:
+# Copy .example.env to .env and fill in your values:
+cp .example.env .env
 ```
 
 Create `backend/.env` with your configuration:
@@ -119,8 +122,10 @@ cd frontend
 # Install dependencies
 npm install
 
-# Create .env.local file
-echo "NEXT_PUBLIC_API_URL=http://localhost:8000" > .env.local
+# Create .env.local file (copy from example)
+cp .example.env .env.local
+# Or manually create with:
+# echo "NEXT_PUBLIC_API_URL=http://localhost:8000" > .env.local
 
 # Run development server
 npm run dev
@@ -194,10 +199,11 @@ The backend uses **APScheduler** to process due reminders:
 
 - **Button**: Multiple variants (primary, secondary, ghost, danger, outline)
 - **Input/Textarea**: With labels, hints, and error states
+- **PhoneInput**: International phone input with country selector and E.164 validation
 - **Select**: Custom styled dropdown
 - **Card**: Elevated, bordered, and glass variants
 - **Badge**: Status indicators with pulse animations
-- **Modal**: Animated dialog with backdrop blur
+- **Modal**: Responsive animated dialog (bottom sheet on mobile)
 - **EmptyState**: Decorative empty state with CTA
 - **Skeleton**: Loading placeholders
 
