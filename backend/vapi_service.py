@@ -71,10 +71,8 @@ After saying this, immediately end the call using the endCall function."""
                 },
                 "firstMessage": f"Hello! This is CallMe Reminder. Your reminder: {message}. Goodbye!",
                 "endCallFunctionEnabled": True,
-                "maxDurationSeconds": 30,
-                "silenceTimeoutSeconds": 3,
-                "responseDelaySeconds": 0,
-                "numWordsToInterruptAssistant": 0,
+                "maxDurationSeconds": 60,
+                "silenceTimeoutSeconds": 10,
                 "backgroundSound": "off"
             }
         }
