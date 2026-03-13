@@ -31,8 +31,12 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     # Startup
     logger.info("Starting up...")
-    Base.metadata.create_all(bind=engine)
-    start_scheduler()
+    try:
+        Base.metadata.create_all(bind=engine)
+        start_scheduler()
+    except Exception as e:
+        logger.exception("Startup failed: %s", e)
+        raise
     yield
     # Shutdown
     logger.info("Shutting down...")
