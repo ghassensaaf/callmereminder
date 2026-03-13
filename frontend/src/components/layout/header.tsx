@@ -48,11 +48,6 @@ export function Header({ onCreateClick }: HeaderProps) {
             <NavLink href="/" active>
               Dashboard
             </NavLink>
-            {session && (
-              <NavLink href="/settings">
-                Settings
-              </NavLink>
-            )}
           </nav>
 
           {/* Actions */}
