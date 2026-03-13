@@ -213,6 +213,10 @@ The backend uses **APScheduler** to process due reminders:
 - **Display**: Space Grotesk (headings)
 - **Mono**: JetBrains Mono (phone numbers)
 
+## ☁️ Deploy to Production (Free)
+
+Deploy to Vercel + Render at **$0/month**. See **[DEPLOYMENT.md](./DEPLOYMENT.md)** for step-by-step instructions.
+
 ## 🐳 Docker Support (Optional)
 
 Create a `docker-compose.yml` in the project root:

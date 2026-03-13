@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     # Database
     database_url: str = "sqlite:///./reminders.db"
     
+    # CORS - comma-separated origins for production (e.g. https://yourapp.vercel.app)
+    cors_origins: str = "http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000,http://127.0.0.1:3001"
+    
     # Server
     host: str = "0.0.0.0"
     port: int = 8000
