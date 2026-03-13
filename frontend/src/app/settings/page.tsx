@@ -174,13 +174,13 @@ export default function SettingsPage() {
                 <div>
                   <p className="text-xs font-medium text-surface-500 dark:text-surface-400 mb-1">API Key</p>
                   <p className="font-mono text-sm text-surface-900 dark:text-surface-100">
-                    {settings.vapiApiKeyDisplay}
+                    {settings?.vapiApiKeyDisplay}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs font-medium text-surface-500 dark:text-surface-400 mb-1">Phone Number ID</p>
                   <p className="font-mono text-sm text-surface-900 dark:text-surface-100">
-                    {settings.vapiPhoneNumberId}
+                    {settings?.vapiPhoneNumberId}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2 pt-2">
