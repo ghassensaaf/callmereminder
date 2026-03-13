@@ -17,7 +17,7 @@ export const auth = betterAuth({
     enabled: true,
   },
   plugins: [
-    dash()
+    ...(process.env.BETTER_AUTH_API_KEY ? [dash({ apiKey: process.env.BETTER_AUTH_API_KEY })] : []),
   ],
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:8000",

@@ -57,6 +57,7 @@ If you see **"could not translate host name dpg-xxx to address"**, you're using 
    | `BETTER_AUTH_URL` | `https://callme-reminder-api.onrender.com` |
    | `DATABASE_URL` | **External Database URL** from PostgreSQL → Connect |
    | `CORS_ORIGINS` | `https://YOUR_APP.vercel.app` (exact Vercel URL, no trailing slash) |
+   | `BETTER_AUTH_API_KEY` | (Optional) From [dash.better-auth.com](https://dash.better-auth.com) → your project → API Key |
 
 5. Click **Create Web Service**
 
