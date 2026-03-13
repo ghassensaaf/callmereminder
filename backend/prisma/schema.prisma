@@ -1,0 +1,22 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Reminder {
+  id           Int       @id @default(autoincrement())
+  title        String    @db.VarChar(255)
+  message      String    @db.VarChar(1000)
+  phone_number String    @db.VarChar(20)
+  scheduled_at DateTime  @db.Timestamptz
+  timezone     String    @db.VarChar(50)
+  status       String    @default("scheduled") @db.VarChar(20)
+  call_id      String?   @db.VarChar(255)
+  error_message String?  @db.VarChar(500)
+  created_at   DateTime  @default(now())
+  updated_at   DateTime? @updatedAt
+}
