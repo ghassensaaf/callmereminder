@@ -64,6 +64,14 @@ export const settingsApi = {
     const response = await api.put("/api/settings", data);
     return response.data;
   },
+  test: async (data: { vapiApiKey: string; vapiPhoneNumberId: string }) => {
+    const response = await api.post("/api/settings/test", data);
+    return response.data as { valid: boolean };
+  },
+  delete: async () => {
+    const response = await api.delete("/api/settings");
+    return response.data as { vapiApiKey: null; vapiPhoneNumberId: null; hasVapiKeys: false };
+  },
 };
 
 export default api;

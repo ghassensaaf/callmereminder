@@ -4,19 +4,30 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "@/lib/auth-client";
 import { settingsApi } from "@/lib/api";
-import { Button, Input, Card } from "@/components/ui";
+import { Button, Input, Card, Badge } from "@/components/ui";
 import { Header } from "@/components/layout";
-import { Phone, Settings, ArrowLeft } from "lucide-react";
+import { Phone, Settings, ArrowLeft, Trash2, TestTube } from "lucide-react";
 import toast from "react-hot-toast";
+import axios from "axios";
 
 export default function SettingsPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { data: session, isPending } = useSession();
   const [vapiApiKey, setVapiApiKey] = useState("");
   const [vapiPhoneNumberId, setVapiPhoneNumberId] = useState("");
   const [loading, setLoading] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const { data: settings, isLoading: settingsLoading } = useQuery({
+    queryKey: ["settings"],
+    queryFn: () => settingsApi.get(),
+    enabled: !!session,
+  });
 
   useEffect(() => {
     if (!isPending && !session) {
@@ -25,25 +36,62 @@ export default function SettingsPage() {
   }, [session, isPending, router]);
 
   useEffect(() => {
-    if (session) {
-      settingsApi.get().then((data) => {
-        setVapiPhoneNumberId(data.vapiPhoneNumberId ?? "");
-      });
+    if (settings?.vapiPhoneNumberId) {
+      setVapiPhoneNumberId(settings.vapiPhoneNumberId);
+    } else {
+      setVapiPhoneNumberId("");
     }
-  }, [session]);
+  }, [settings?.vapiPhoneNumberId]);
+
+  async function handleTest() {
+    const apiKey = vapiApiKey.trim();
+    const phoneId = vapiPhoneNumberId.trim();
+    if (!apiKey || !phoneId) {
+      toast.error("Enter API key and phone number ID to test");
+      return;
+    }
+    setTesting(true);
+    try {
+      await settingsApi.test({ vapiApiKey: apiKey, vapiPhoneNumberId: phoneId });
+      toast.success("Configuration is valid");
+    } catch (err) {
+      const msg = axios.isAxiosError(err) ? err.response?.data?.error : "Validation failed";
+      toast.error(msg || "Invalid configuration");
+    } finally {
+      setTesting(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!confirm("Remove Vapi configuration? Voice reminders will stop working until you add new credentials.")) return;
+    setDeleting(true);
+    try {
+      await settingsApi.delete();
+      queryClient.setQueryData(["settings"], { vapiApiKey: null, vapiPhoneNumberId: null, hasVapiKeys: false });
+      setVapiApiKey("");
+      setVapiPhoneNumberId("");
+      toast.success("Vapi configuration removed");
+    } catch {
+      toast.error("Failed to remove configuration");
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     try {
-      await settingsApi.update({
+      const updated = await settingsApi.update({
         vapiApiKey: vapiApiKey.trim() || undefined,
         vapiPhoneNumberId: vapiPhoneNumberId.trim() || undefined,
       });
+      queryClient.setQueryData(["settings"], updated);
       toast.success("Settings saved");
       setVapiApiKey("");
     } catch (err) {
-      toast.error("Failed to save settings");
+      const msg = axios.isAxiosError(err) ? err.response?.data?.detail : "Failed to save";
+      toast.error(msg || "Failed to save settings");
     } finally {
       setLoading(false);
     }
@@ -56,6 +104,8 @@ export default function SettingsPage() {
       </div>
     );
   }
+
+  const hasConfig = settings?.hasVapiKeys ?? false;
 
   return (
     <div className="min-h-screen">
@@ -90,10 +140,23 @@ export default function SettingsPage() {
           </div>
 
           <Card variant="elevated" className="p-6">
-            <h2 className="font-semibold text-surface-900 dark:text-surface-50 mb-4 flex items-center gap-2">
-              <Phone className="h-4 w-4" />
-              Vapi Configuration
-            </h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-semibold text-surface-900 dark:text-surface-50 flex items-center gap-2">
+                <Phone className="h-4 w-4" />
+                Vapi Configuration
+              </h2>
+              {!settingsLoading && (
+                hasConfig ? (
+                  <Badge variant="success" dot>
+                    Configured
+                  </Badge>
+                ) : (
+                  <Badge variant="warning" dot>
+                    Not configured
+                  </Badge>
+                )
+              )}
+            </div>
             <p className="text-sm text-surface-500 dark:text-surface-400 mb-6">
               Add your Vapi API key and phone number ID to enable voice call reminders.{" "}
               <Link href="/docs/vapi" className="text-primary-600 dark:text-primary-400 hover:underline">
@@ -107,7 +170,7 @@ export default function SettingsPage() {
                 type="password"
                 value={vapiApiKey}
                 onChange={(e) => setVapiApiKey(e.target.value)}
-                placeholder="Enter new API key to update"
+                placeholder={hasConfig ? "Enter new API key to update" : "Enter your API key"}
                 hint="Your key is stored securely and never shown"
               />
               <Input
@@ -117,9 +180,32 @@ export default function SettingsPage() {
                 onChange={(e) => setVapiPhoneNumberId(e.target.value)}
                 placeholder="e.g. 123e4567-e89b-12d3-a456-426614174000"
               />
-              <Button type="submit" disabled={loading}>
-                {loading ? "Saving..." : "Save settings"}
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button type="submit" disabled={loading}>
+                  {loading ? "Saving..." : "Save settings"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={testing || !vapiApiKey.trim() || !vapiPhoneNumberId.trim()}
+                  onClick={handleTest}
+                >
+                  <TestTube className="h-4 w-4 mr-1.5" />
+                  {testing ? "Testing..." : "Test"}
+                </Button>
+                {hasConfig && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="text-danger-600 dark:text-danger-400 border-danger-200 dark:border-danger-800 hover:bg-danger-50 dark:hover:bg-danger-950/30"
+                    disabled={deleting}
+                    onClick={handleDelete}
+                  >
+                    <Trash2 className="h-4 w-4 mr-1.5" />
+                    {deleting ? "Removing..." : "Remove"}
+                  </Button>
+                )}
+              </div>
             </form>
           </Card>
         </motion.div>

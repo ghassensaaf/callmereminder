@@ -2,6 +2,37 @@ import axios from "axios";
 
 const VAPI_BASE_URL = "https://api.vapi.ai";
 
+/**
+ * Validate Vapi API key and phone number ID by fetching the phone number.
+ * Returns { valid: true } or { valid: false, error: string }.
+ */
+export async function validateVapiConfig(apiKey, phoneNumberId) {
+  if (!apiKey?.trim() || !phoneNumberId?.trim()) {
+    return { valid: false, error: "API key and phone number ID are required" };
+  }
+  try {
+    const response = await axios.get(
+      `${VAPI_BASE_URL}/phone-number/${phoneNumberId.trim()}`,
+      {
+        headers: {
+          Authorization: `Bearer ${apiKey.trim()}`,
+        },
+        timeout: 10000,
+      }
+    );
+    if (response.status === 200 && response.data) {
+      return { valid: true };
+    }
+    return { valid: false, error: "Invalid response from Vapi" };
+  } catch (err) {
+    const status = err.response?.status;
+    const msg = err.response?.data?.message || err.message;
+    if (status === 401) return { valid: false, error: "Invalid API key" };
+    if (status === 404) return { valid: false, error: "Phone number ID not found" };
+    return { valid: false, error: msg || "Validation failed" };
+  }
+}
+
 export async function makeCall(toPhoneNumber, message, reminderTitle, apiKey, phoneNumberId) {
   if (!apiKey || !phoneNumberId) {
     console.error("Vapi API key or phone number ID not configured for user");

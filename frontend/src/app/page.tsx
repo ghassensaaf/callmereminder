@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 
 import { Header } from "@/components/layout";
 import { AuthGuard } from "@/components/auth-guard";
-import { FilterTabs, SearchInput } from "@/components/dashboard";
+import { FilterTabs, SearchInput, VapiConfigWarning } from "@/components/dashboard";
 import { ReminderForm, ReminderList, StatsCards } from "@/components/reminder";
 import { Modal, Card } from "@/components/ui";
 import { ReminderStatus } from "@/types/reminder";
@@ -37,6 +37,11 @@ export default function DashboardPage() {
             Stay on top of your schedule with voice call reminders
           </p>
         </motion.div>
+
+        {/* Vapi config warning */}
+        <div className="mb-6">
+          <VapiConfigWarning />
+        </div>
 
         {/* Stats Cards */}
         <div className="mb-8">
