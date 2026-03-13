@@ -80,7 +80,7 @@ const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
             if (value !== undefined && value !== phone) {
                 setPhone(value);
             }
-        }, [value]);
+        }, [value, phone]);
 
         const handleChange = (newPhone: string) => {
             setPhone(newPhone);

@@ -70,7 +70,13 @@ export function Header({ onCreateClick }: HeaderProps) {
                     variant="ghost"
                     size="sm"
                     leftIcon={<LogOut className="h-4 w-4" />}
-                    onClick={() => signOut({ callbackURL: "/login" })}
+                    onClick={() => {
+                      signOut({
+                        fetchOptions: {
+                          onSuccess: () => window.location.assign("/login"),
+                        },
+                      });
+                    }}
                   >
                     Sign out
                   </Button>
