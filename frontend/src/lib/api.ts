@@ -8,6 +8,7 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true,
 });
 
 // Reminders API
@@ -49,6 +50,18 @@ export const remindersApi = {
   // Get stats
   stats: async (): Promise<ReminderStats> => {
     const response = await api.get("/api/stats");
+    return response.data;
+  },
+};
+
+// Settings API (Vapi keys)
+export const settingsApi = {
+  get: async (): Promise<{ vapiApiKey: string | null; vapiPhoneNumberId: string | null; hasVapiKeys: boolean }> => {
+    const response = await api.get("/api/settings");
+    return response.data;
+  },
+  update: async (data: { vapiApiKey?: string; vapiPhoneNumberId?: string }) => {
+    const response = await api.put("/api/settings", data);
     return response.data;
   },
 };

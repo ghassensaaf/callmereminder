@@ -2,16 +2,19 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Plus, Phone } from "lucide-react";
+import { Plus, Phone, Settings, LogOut } from "lucide-react";
 
 import { Button, ThemeToggle } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import { useSession, signOut } from "@/lib/auth-client";
 
 interface HeaderProps {
   onCreateClick?: () => void;
 }
 
 export function Header({ onCreateClick }: HeaderProps) {
+  const { data: session, isPending } = useSession();
+
   return (
     <header className="sticky top-0 z-40 w-full">
       {/* Backdrop blur */}
@@ -25,7 +28,6 @@ export function Header({ onCreateClick }: HeaderProps) {
               <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 shadow-lg shadow-primary-500/25 group-hover:shadow-primary-500/40 transition-shadow">
                 <Phone className="h-5 w-5 text-white" />
               </div>
-              {/* Pulse indicator */}
               <span className="absolute -top-1 -right-1 flex h-3 w-3">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-primary-500" />
@@ -46,26 +48,63 @@ export function Header({ onCreateClick }: HeaderProps) {
             <NavLink href="/" active>
               Dashboard
             </NavLink>
+            {session && (
+              <NavLink href="/settings">
+                Settings
+              </NavLink>
+            )}
           </nav>
 
           {/* Actions */}
           <div className="flex items-center gap-3">
             <ThemeToggle />
-            <Button
-              onClick={onCreateClick}
-              leftIcon={<Plus className="h-4 w-4" />}
-              className="hidden sm:inline-flex"
-            >
-              New Reminder
-            </Button>
-            <Button
-              onClick={onCreateClick}
-              size="sm"
-              className="sm:hidden"
-              leftIcon={<Plus className="h-4 w-4" />}
-            >
-              New
-            </Button>
+            {!isPending && (
+              session ? (
+                <>
+                  <Link href="/settings">
+                    <Button variant="ghost" size="sm" leftIcon={<Settings className="h-4 w-4" />} className="hidden sm:inline-flex">
+                      Settings
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    leftIcon={<LogOut className="h-4 w-4" />}
+                    onClick={() => signOut({ callbackURL: "/login" })}
+                  >
+                    Sign out
+                  </Button>
+                  {onCreateClick && (
+                    <>
+                      <Button
+                        onClick={onCreateClick}
+                        leftIcon={<Plus className="h-4 w-4" />}
+                        className="hidden sm:inline-flex"
+                      >
+                        New Reminder
+                      </Button>
+                      <Button
+                        onClick={onCreateClick}
+                        size="sm"
+                        className="sm:hidden"
+                        leftIcon={<Plus className="h-4 w-4" />}
+                      >
+                        New
+                      </Button>
+                    </>
+                  )}
+                </>
+              ) : (
+                <>
+                  <Link href="/login">
+                    <Button variant="ghost" size="sm">Sign in</Button>
+                  </Link>
+                  <Link href="/signup">
+                    <Button size="sm">Sign up</Button>
+                  </Link>
+                </>
+              )
+            )}
           </div>
         </div>
       </div>

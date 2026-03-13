@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 
 import { Header } from "@/components/layout";
+import { AuthGuard } from "@/components/auth-guard";
 import { FilterTabs, SearchInput } from "@/components/dashboard";
 import { ReminderForm, ReminderList, StatsCards } from "@/components/reminder";
 import { Modal, Card } from "@/components/ui";
@@ -17,6 +18,7 @@ export default function DashboardPage() {
   const [search, setSearch] = useState("");
 
   return (
+    <AuthGuard>
     <div className="min-h-screen">
       <Header onCreateClick={() => setIsCreateModalOpen(true)} />
 
@@ -78,5 +80,6 @@ export default function DashboardPage() {
         />
       </Modal>
     </div>
+    </AuthGuard>
   );
 }

@@ -74,9 +74,9 @@ cp .example.env .env
 Create `backend/.env` with your configuration:
 
 ```env
-# Vapi Configuration
-VAPI_API_KEY=your_vapi_api_key_here
-VAPI_PHONE_NUMBER_ID=your_vapi_phone_number_id_here
+# Auth (generate secret: openssl rand -base64 32)
+BETTER_AUTH_SECRET=your_secret_here
+BETTER_AUTH_URL=http://localhost:8000
 
 # Database (PostgreSQL - use Neon, Render, or local)
 DATABASE_URL=postgresql://user:password@host:5432/dbname
@@ -85,11 +85,7 @@ DATABASE_URL=postgresql://user:password@host:5432/dbname
 CORS_ORIGINS=http://localhost:3000
 ```
 
-**How to get Vapi credentials:**
-
-1. Go to [Vapi Dashboard](https://dashboard.vapi.ai)
-2. Navigate to **Settings** → **API Keys** to get your `VAPI_API_KEY`
-3. Navigate to **Phone Numbers** → Import/Buy a number → Copy the Phone Number ID
+**Vapi credentials:** Each user adds their own keys in **Settings** after signing up. See the in-app guide at Settings → How to get these.
 
 ```bash
 # Push schema to database

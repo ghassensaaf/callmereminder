@@ -7,16 +7,80 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Better Auth
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+  reminders     Reminder[]
+  settings      UserSettings?
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  expiresAt DateTime
+  token     String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([token])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  @@map("account")
+}
+
+// User Vapi settings (per-user keys)
+model UserSettings {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  vapiApiKey        String?
+  vapiPhoneNumberId String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@map("user_settings")
+}
+
 model Reminder {
-  id           Int       @id @default(autoincrement())
-  title        String    @db.VarChar(255)
-  message      String    @db.VarChar(1000)
-  phone_number String    @db.VarChar(20)
-  scheduled_at DateTime  @db.Timestamptz
-  timezone     String    @db.VarChar(50)
-  status       String    @default("scheduled") @db.VarChar(20)
-  call_id      String?   @db.VarChar(255)
-  error_message String?  @db.VarChar(500)
-  created_at   DateTime  @default(now())
-  updated_at   DateTime? @updatedAt
+  id            Int       @id @default(autoincrement())
+  userId        String
+  title         String    @db.VarChar(255)
+  message       String    @db.VarChar(1000)
+  phone_number  String    @db.VarChar(20)
+  scheduled_at  DateTime  @db.Timestamptz
+  timezone      String    @db.VarChar(50)
+  status        String    @default("scheduled") @db.VarChar(20)
+  call_id       String?   @db.VarChar(255)
+  error_message String?   @db.VarChar(500)
+  created_at    DateTime  @default(now())
+  updated_at    DateTime? @updatedAt
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@map("reminders")
 }

@@ -13,6 +13,7 @@ async function processDueReminders() {
         scheduled_at: { lte: now },
       },
       orderBy: { scheduled_at: "asc" },
+      include: { user: { include: { settings: true } } },
     });
 
     if (dueReminders.length > 0) {
@@ -27,10 +28,16 @@ async function processDueReminders() {
 
       console.log(`Processing reminder ${reminder.id}: ${reminder.title}`);
 
+      const settings = reminder.user?.settings;
+      const apiKey = settings?.vapiApiKey ?? null;
+      const phoneNumberId = settings?.vapiPhoneNumberId ?? null;
+
       const { success, callId, errorMessage } = await makeCall(
         reminder.phone_number,
         reminder.message,
-        reminder.title
+        reminder.title,
+        apiKey,
+        phoneNumberId
       );
 
       if (success) {

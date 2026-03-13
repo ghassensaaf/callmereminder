@@ -53,8 +53,8 @@ If you see **"could not translate host name dpg-xxx to address"**, you're using 
 4. **Environment Variables** — add these (use **External** URL for DATABASE_URL):
    | Key | Value |
    |-----|-------|
-   | `VAPI_API_KEY` | Your Vapi API key |
-   | `VAPI_PHONE_NUMBER_ID` | Your Vapi phone number ID |
+   | `BETTER_AUTH_SECRET` | Generate with `openssl rand -base64 32` |
+   | `BETTER_AUTH_URL` | `https://callme-reminder-api.onrender.com` |
    | `DATABASE_URL` | **External Database URL** from PostgreSQL → Connect |
    | `CORS_ORIGINS` | `https://YOUR_APP.vercel.app` (add after Step 2) |
 

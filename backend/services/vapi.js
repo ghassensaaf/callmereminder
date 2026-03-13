@@ -2,13 +2,10 @@ import axios from "axios";
 
 const VAPI_BASE_URL = "https://api.vapi.ai";
 
-export async function makeCall(toPhoneNumber, message, reminderTitle) {
-  const apiKey = process.env.VAPI_API_KEY;
-  const phoneNumberId = process.env.VAPI_PHONE_NUMBER_ID;
-
+export async function makeCall(toPhoneNumber, message, reminderTitle, apiKey, phoneNumberId) {
   if (!apiKey || !phoneNumberId) {
-    console.error("Vapi API key or phone number ID not configured");
-    return { success: false, callId: null, errorMessage: "Vapi not configured" };
+    console.error("Vapi API key or phone number ID not configured for user");
+    return { success: false, callId: null, errorMessage: "Vapi not configured. Add your keys in Settings." };
   }
 
   const payload = {
