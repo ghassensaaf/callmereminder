@@ -44,10 +44,6 @@ export default function SettingsPage() {
     }
   }, [settings?.vapiPhoneNumberId]);
 
-  useEffect(() => {
-    if (!settings?.hasVapiKeys) setIsEditing(true);
-  }, [settings?.hasVapiKeys]);
-
   async function handleTest() {
     const apiKey = vapiApiKey.trim();
     const phoneId = vapiPhoneNumberId.trim();
