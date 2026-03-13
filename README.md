@@ -1,10 +1,11 @@
 # CallMe Reminder
 
-A modern, full-stack reminder application that calls you with voice reminders at scheduled times using Vapi AI. Built with Next.js, FastAPI, and premium UI/UX design.
+A modern, full-stack reminder application that calls you with voice reminders at scheduled times using Vapi AI. Built with Next.js, Express, and Prisma. Premium UI/UX design.
 
 ![CallMe Reminder](https://img.shields.io/badge/Status-Production%20Ready-green)
 ![Next.js](https://img.shields.io/badge/Next.js-14-black)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.109-009688)
+![Express](https://img.shields.io/badge/Express-4.18-000000)
+![Prisma](https://img.shields.io/badge/Prisma-5-2D3748)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.3-3178C6)
 
 ## ✨ Features
@@ -33,14 +34,12 @@ callMeReminder/
 │   │   ├── lib/       # Utilities and API client
 │   │   └── types/     # TypeScript types
 │   └── ...
-├── backend/           # FastAPI Python
-│   ├── main.py        # API endpoints
-│   ├── models.py      # SQLAlchemy models
-│   ├── schemas.py     # Pydantic schemas
-│   ├── database.py    # Database configuration
-│   ├── scheduler.py   # Background job scheduler
-│   ├── vapi_service.py # Vapi integration
-│   └── config.py      # Settings management
+├── backend/           # Express + Prisma
+│   ├── index.js       # API server
+│   ├── prisma/        # Schema & migrations
+│   ├── lib/           # Prisma client
+│   ├── services/      # Vapi integration, scheduler
+│   └── .env            # Config (see .example.env)
 └── README.md
 ```
 
@@ -49,9 +48,8 @@ callMeReminder/
 ### Prerequisites
 
 - **Node.js** 18+ and npm
-- **Python** 3.9+
+- **PostgreSQL** (local or cloud, e.g. [Neon](https://neon.tech) free tier)
 - **Vapi Account**: Sign up at [vapi.ai](https://vapi.ai) (free tier available)
-- **Twilio Account** (optional): For your own phone number
 
 ### 1. Clone the Repository
 
@@ -66,20 +64,10 @@ cd callmereminder
 # Navigate to backend
 cd backend
 
-# Create virtual environment
-python -m venv venv
-
-# Activate virtual environment
-# On Windows:
-venv\Scripts\activate
-# On macOS/Linux:
-source venv/bin/activate
-
 # Install dependencies
-pip install -r requirements.txt
+npm install
 
-# Create .env file
-# Copy .example.env to .env and fill in your values:
+# Create .env file (copy from example)
 cp .example.env .env
 ```
 
@@ -90,12 +78,11 @@ Create `backend/.env` with your configuration:
 VAPI_API_KEY=your_vapi_api_key_here
 VAPI_PHONE_NUMBER_ID=your_vapi_phone_number_id_here
 
-# Database
-DATABASE_URL=sqlite:///./reminders.db
+# Database (PostgreSQL - use Neon, Render, or local)
+DATABASE_URL=postgresql://user:password@host:5432/dbname
 
-# Server
-HOST=0.0.0.0
-PORT=8000
+# CORS (optional, for production)
+CORS_ORIGINS=http://localhost:3000
 ```
 
 **How to get Vapi credentials:**
@@ -105,10 +92,11 @@ PORT=8000
 3. Navigate to **Phone Numbers** → Import/Buy a number → Copy the Phone Number ID
 
 ```bash
+# Push schema to database
+npx prisma db push
+
 # Run the backend server
-python main.py
-# or
-uvicorn main:app --reload --port 8000
+npm run dev
 ```
 
 The API will be available at `http://localhost:8000`
@@ -135,7 +123,7 @@ The app will be available at `http://localhost:3000`
 
 ## 🔄 How Scheduling Works
 
-The backend uses **APScheduler** to process due reminders:
+The backend uses a **15-second interval** to process due reminders:
 
 1. A background job runs every **15 seconds**
 2. It queries for reminders where:
@@ -268,4 +256,4 @@ MIT
 
 ---
 
-Built with ❤️ using Next.js, FastAPI, and Vapi AI
+Built with ❤️ using Next.js, Express, Prisma, and Vapi AI
