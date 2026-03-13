@@ -100,6 +100,8 @@ Ensure `DATABASE_URL` is set before build. Prisma needs it for `db push`. If the
 
 If you see "blocked by CORS policy" when logging in from Vercel:
 
-1. In Render → your backend → **Environment**, set `CORS_ORIGINS` to your **exact** Vercel URL: `https://callmereminder.vercel.app` (no trailing slash)
-2. Save and wait for redeploy
-3. Ensure the backend is awake (cron-job.org pinging `/health` every 10 min)
+1. **Render cold start** – Free tier sleeps after 15 min. First request can fail before the app wakes. Fix: Set up [cron-job.org](https://cron-job.org) to ping `https://YOUR_BACKEND.onrender.com/health` every 10 minutes.
+
+2. **CORS_ORIGINS** – In Render → Environment, set to your Vercel URL: `https://callmereminder.vercel.app` (no trailing slash). Save and redeploy.
+
+3. **Test backend is awake** – Open `https://callmereminder.onrender.com/health` in a new tab. If it returns `{"status":"healthy"}`, the backend is up. If it hangs or errors, wait 1–2 min and retry.

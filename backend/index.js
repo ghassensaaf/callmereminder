@@ -12,16 +12,23 @@ const PORT = process.env.PORT || 8000;
 
 const corsOrigins = (process.env.CORS_ORIGINS || "http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000,http://127.0.0.1:3001")
   .split(",")
-  .map((o) => o.trim())
+  .map((o) => o.trim().replace(/\/$/, ""))
   .filter(Boolean);
+
+function corsOrigin(origin, cb) {
+  if (!origin) return cb(null, true);
+  const allowed = corsOrigins.some((o) => origin === o || origin.endsWith(".vercel.app"));
+  cb(null, allowed ? origin : false);
+}
 
 app.use(
   cors({
-    origin: corsOrigins,
+    origin: corsOrigin,
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    exposedHeaders: ["set-cookie"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allowedHeaders: ["Content-Type", "Authorization", "Accept", "Origin"],
+    exposedHeaders: ["Set-Cookie"],
+    optionsSuccessStatus: 200,
   })
 );
 
