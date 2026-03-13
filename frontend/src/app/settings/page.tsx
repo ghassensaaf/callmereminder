@@ -22,6 +22,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
   const [testing, setTesting] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   const { data: settings, isLoading: settingsLoading } = useQuery({
     queryKey: ["settings"],
@@ -42,6 +43,10 @@ export default function SettingsPage() {
       setVapiPhoneNumberId("");
     }
   }, [settings?.vapiPhoneNumberId]);
+
+  useEffect(() => {
+    if (!settings?.hasVapiKeys) setIsEditing(true);
+  }, [settings?.hasVapiKeys]);
 
   async function handleTest() {
     const apiKey = vapiApiKey.trim();
@@ -67,7 +72,7 @@ export default function SettingsPage() {
     setDeleting(true);
     try {
       await settingsApi.delete();
-      queryClient.setQueryData(["settings"], { vapiApiKey: null, vapiPhoneNumberId: null, hasVapiKeys: false });
+      queryClient.setQueryData(["settings"], { vapiApiKeyDisplay: null, vapiPhoneNumberId: null, hasVapiKeys: false });
       setVapiApiKey("");
       setVapiPhoneNumberId("");
       toast.success("Vapi configuration removed");
@@ -164,39 +169,28 @@ export default function SettingsPage() {
               </Link>
             </p>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <Input
-                label="Vapi API Key"
-                type="password"
-                value={vapiApiKey}
-                onChange={(e) => setVapiApiKey(e.target.value)}
-                placeholder={hasConfig ? "Enter new API key to update" : "Enter your API key"}
-                hint="Your key is stored securely and never shown"
-              />
-              <Input
-                label="Vapi Phone Number ID"
-                type="text"
-                value={vapiPhoneNumberId}
-                onChange={(e) => setVapiPhoneNumberId(e.target.value)}
-                placeholder="e.g. 123e4567-e89b-12d3-a456-426614174000"
-              />
-              <div className="flex flex-wrap gap-2">
-                <Button type="submit" disabled={loading}>
-                  {loading ? "Saving..." : "Save settings"}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={testing || !vapiApiKey.trim() || !vapiPhoneNumberId.trim()}
-                  onClick={handleTest}
-                >
-                  <TestTube className="h-4 w-4 mr-1.5" />
-                  {testing ? "Testing..." : "Test"}
-                </Button>
-                {hasConfig && (
+            {hasConfig && !isEditing ? (
+              <div className="space-y-4">
+                <div>
+                  <p className="text-xs font-medium text-surface-500 dark:text-surface-400 mb-1">API Key</p>
+                  <p className="font-mono text-sm text-surface-900 dark:text-surface-100">
+                    {settings.vapiApiKeyDisplay}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-surface-500 dark:text-surface-400 mb-1">Phone Number ID</p>
+                  <p className="font-mono text-sm text-surface-900 dark:text-surface-100">
+                    {settings.vapiPhoneNumberId}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2 pt-2">
+                  <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                    Change
+                  </Button>
                   <Button
                     type="button"
                     variant="outline"
+                    size="sm"
                     className="text-danger-600 dark:text-danger-400 border-danger-200 dark:border-danger-800 hover:bg-danger-50 dark:hover:bg-danger-950/30"
                     disabled={deleting}
                     onClick={handleDelete}
@@ -204,9 +198,50 @@ export default function SettingsPage() {
                     <Trash2 className="h-4 w-4 mr-1.5" />
                     {deleting ? "Removing..." : "Remove"}
                   </Button>
-                )}
+                </div>
               </div>
-            </form>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <Input
+                  label="Vapi API Key"
+                  type="password"
+                  value={vapiApiKey}
+                  onChange={(e) => setVapiApiKey(e.target.value)}
+                  placeholder={hasConfig ? "Enter new API key to update" : "Enter your API key"}
+                  hint="Your key is stored securely and never shown"
+                />
+                <Input
+                  label="Vapi Phone Number ID"
+                  type="text"
+                  value={vapiPhoneNumberId}
+                  onChange={(e) => setVapiPhoneNumberId(e.target.value)}
+                  placeholder="e.g. 123e4567-e89b-12d3-a456-426614174000"
+                />
+                <div className="flex flex-wrap gap-2">
+                  <Button type="submit" disabled={loading}>
+                    {loading ? "Saving..." : "Save settings"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={testing || !vapiApiKey.trim() || !vapiPhoneNumberId.trim()}
+                    onClick={handleTest}
+                  >
+                    <TestTube className="h-4 w-4 mr-1.5" />
+                    {testing ? "Testing..." : "Test"}
+                  </Button>
+                  {hasConfig && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => setIsEditing(false)}
+                    >
+                      Cancel
+                    </Button>
+                  )}
+                </div>
+              </form>
+            )}
           </Card>
         </motion.div>
       </main>

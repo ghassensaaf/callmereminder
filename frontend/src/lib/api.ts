@@ -56,7 +56,7 @@ export const remindersApi = {
 
 // Settings API (Vapi keys)
 export const settingsApi = {
-  get: async (): Promise<{ vapiApiKey: string | null; vapiPhoneNumberId: string | null; hasVapiKeys: boolean }> => {
+  get: async (): Promise<{ vapiApiKeyDisplay: string | null; vapiPhoneNumberId: string | null; hasVapiKeys: boolean }> => {
     const response = await api.get("/api/settings");
     return response.data;
   },
@@ -70,7 +70,7 @@ export const settingsApi = {
   },
   delete: async () => {
     const response = await api.delete("/api/settings");
-    return response.data as { vapiApiKey: null; vapiPhoneNumberId: null; hasVapiKeys: false };
+    return response.data as { vapiApiKeyDisplay: null; vapiPhoneNumberId: null; hasVapiKeys: false };
   },
 };
 

@@ -15,8 +15,12 @@ router.get("/", requireAuth, async (req, res) => {
         data: { userId: req.user.id },
       });
     }
+    const hasKey = !!settings.vapiApiKey;
+    const apiKeyDisplay = hasKey
+      ? "*****" + settings.vapiApiKey.slice(-5)
+      : null;
     res.json({
-      vapiApiKey: settings.vapiApiKey ? "••••••••" : null,
+      vapiApiKeyDisplay: apiKeyDisplay,
       vapiPhoneNumberId: settings.vapiPhoneNumberId ?? null,
       hasVapiKeys: !!(settings.vapiApiKey && settings.vapiPhoneNumberId),
     });
@@ -48,8 +52,12 @@ router.put("/", requireAuth, async (req, res) => {
       create: { userId: req.user.id, ...data },
       update: data,
     });
+    const hasKey = !!settings.vapiApiKey;
+    const apiKeyDisplay = hasKey
+      ? "*****" + settings.vapiApiKey.slice(-5)
+      : null;
     res.json({
-      vapiApiKey: settings.vapiApiKey ? "••••••••" : null,
+      vapiApiKeyDisplay: apiKeyDisplay,
       vapiPhoneNumberId: settings.vapiPhoneNumberId ?? null,
       hasVapiKeys: !!(settings.vapiApiKey && settings.vapiPhoneNumberId),
     });
@@ -82,7 +90,7 @@ router.delete("/", requireAuth, async (req, res) => {
       update: { vapiApiKey: null, vapiPhoneNumberId: null },
     });
     res.json({
-      vapiApiKey: null,
+      vapiApiKeyDisplay: null,
       vapiPhoneNumberId: null,
       hasVapiKeys: false,
     });
