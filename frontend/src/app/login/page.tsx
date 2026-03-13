@@ -2,14 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { signIn } from "@/lib/auth-client";
 import { Button, Input, Card } from "@/components/ui";
 import { Phone } from "lucide-react";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -29,8 +27,7 @@ export default function LoginPage() {
         setError(result.error.message || "Invalid email or password");
         return;
       }
-      router.push("/");
-      router.refresh();
+      window.location.href = "/";
     } catch (err) {
       setError("Something went wrong");
     } finally {

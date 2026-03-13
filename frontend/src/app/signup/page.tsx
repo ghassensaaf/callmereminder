@@ -2,14 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { signUp } from "@/lib/auth-client";
 import { Button, Input, Card } from "@/components/ui";
 import { Phone } from "lucide-react";
 
 export default function SignupPage() {
-  const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,8 +29,7 @@ export default function SignupPage() {
         setError(result.error.message || "Invalid input");
         return;
       }
-      router.push("/");
-      router.refresh();
+      window.location.href = "/";
     } catch (err) {
       setError("Something went wrong");
     } finally {
