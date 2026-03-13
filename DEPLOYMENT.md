@@ -56,7 +56,7 @@ If you see **"could not translate host name dpg-xxx to address"**, you're using 
    | `BETTER_AUTH_SECRET` | Generate with `openssl rand -base64 32` |
    | `BETTER_AUTH_URL` | `https://callme-reminder-api.onrender.com` |
    | `DATABASE_URL` | **External Database URL** from PostgreSQL → Connect |
-   | `CORS_ORIGINS` | `https://YOUR_APP.vercel.app` (add after Step 2) |
+   | `CORS_ORIGINS` | `https://YOUR_APP.vercel.app` (exact Vercel URL, no trailing slash) |
 
 5. Click **Create Web Service**
 
@@ -95,3 +95,11 @@ You're using the **Internal** Database URL. Internal hostnames (`dpg-xxxxx-a`) o
 ### Prisma / DATABASE_URL
 
 Ensure `DATABASE_URL` is set before build. Prisma needs it for `db push`. If the build fails, add `DATABASE_URL` as a secret in Render and redeploy.
+
+### CORS errors (blocked by policy)
+
+If you see "blocked by CORS policy" when logging in from Vercel:
+
+1. In Render → your backend → **Environment**, set `CORS_ORIGINS` to your **exact** Vercel URL: `https://callmereminder.vercel.app` (no trailing slash)
+2. Save and wait for redeploy
+3. Ensure the backend is awake (cron-job.org pinging `/health` every 10 min)

@@ -15,7 +15,15 @@ const corsOrigins = (process.env.CORS_ORIGINS || "http://localhost:3000,http://l
   .map((o) => o.trim())
   .filter(Boolean);
 
-app.use(cors({ origin: corsOrigins, credentials: true }));
+app.use(
+  cors({
+    origin: corsOrigins,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    exposedHeaders: ["set-cookie"],
+  })
+);
 
 // Better Auth - must be before express.json()
 app.all("/api/auth/*", toNodeHandler(auth));
