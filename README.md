@@ -1,255 +1,203 @@
-# CallMe Reminder
+# Dialcues
 
-A modern, full-stack reminder application that calls you with voice reminders at scheduled times using Vapi AI. Built with Next.js, Express, and Prisma. Premium UI/UX design.
+Voice call reminders powered by AI. Users schedule reminders and receive a phone call at the right time—no more silent notifications.
 
-![CallMe Reminder](https://img.shields.io/badge/Status-Production%20Ready-green)
-![Next.js](https://img.shields.io/badge/Next.js-14-black)
-![Express](https://img.shields.io/badge/Express-4.18-000000)
-![Prisma](https://img.shields.io/badge/Prisma-5-2D3748)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.3-3178C6)
-
-## ✨ Features
-
-- **📞 Voice Call Reminders**: Automatically calls your phone and speaks your reminder message
-- **🎨 Premium UI/UX**: Beautiful, responsive design with smooth animations
-- **📊 Dashboard**: View all reminders with filtering, search, and status badges
-- **⏰ Real-time Countdown**: See time remaining for scheduled reminders
-- **🔄 Auto-refresh**: Dashboard updates automatically every 10 seconds
-- **📱 Fully Responsive**: Works perfectly on mobile, tablet, and desktop
-- **🌍 International Phone Input**: Premium phone number input with country selector and validation
-- **🌐 Timezone Support**: Auto-detects user timezone with manual override option
-
-## 🏗️ Architecture
-
-```
-callMeReminder/
-├── frontend/          # Next.js 14 (App Router)
-│   ├── src/
-│   │   ├── app/       # Pages and layouts
-│   │   ├── components/
-│   │   │   ├── ui/    # Reusable UI primitives
-│   │   │   ├── reminder/  # Reminder-specific components
-│   │   │   ├── dashboard/ # Dashboard components
-│   │   │   └── layout/    # Layout components
-│   │   ├── lib/       # Utilities and API client
-│   │   └── types/     # TypeScript types
-│   └── ...
-├── backend/           # Express + Prisma
-│   ├── index.js       # API server
-│   ├── prisma/        # Schema & migrations
-│   ├── lib/           # Prisma client
-│   ├── services/      # Vapi integration, scheduler
-│   └── .env            # Config (see .example.env)
-└── README.md
-```
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- **Node.js** 18+ and npm
-- **PostgreSQL** (local or cloud, e.g. [Neon](https://neon.tech) free tier)
-- **Vapi Account**: Sign up at [vapi.ai](https://vapi.ai) (free tier available)
-
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/ghassensaaf/callmereminder.git
-cd callmereminder
-```
-
-### 2. Backend Setup
-
-```bash
-# Navigate to backend
-cd backend
-
-# Install dependencies
-npm install
-
-# Create .env file (copy from example)
-cp .example.env .env
-```
-
-Create `backend/.env` with your configuration:
-
-```env
-# Auth (generate secret: openssl rand -base64 32)
-BETTER_AUTH_SECRET=your_secret_here
-BETTER_AUTH_URL=http://localhost:8000
-
-# Database (PostgreSQL - use Neon, Render, or local)
-DATABASE_URL=postgresql://user:password@host:5432/dbname
-
-# CORS (optional, for production)
-CORS_ORIGINS=http://localhost:3000
-```
-
-**Vapi credentials:** Each user adds their own keys in **Settings** after signing up. See the in-app guide at Settings → How to get these.
-
-```bash
-# Push schema to database
-npx prisma db push
-
-# Run the backend server
-npm run dev
-```
-
-The API will be available at `http://localhost:8000`
-
-### 3. Frontend Setup
-
-```bash
-# Navigate to frontend (from project root)
-cd frontend
-
-# Install dependencies
-npm install
-
-# Create .env.local file (copy from example)
-cp .example.env .env.local
-# Or manually create with:
-# echo "NEXT_PUBLIC_API_URL=http://localhost:8000" > .env.local
-
-# Run development server
-npm run dev
-```
-
-The app will be available at `http://localhost:3000`
-
-## 🔄 How Scheduling Works
-
-The backend uses a **15-second interval** to process due reminders:
-
-1. A background job runs every **15 seconds**
-2. It queries for reminders where:
-   - `status` = `SCHEDULED`
-   - `scheduled_at` <= current time
-3. For each due reminder:
-   - Status is updated to `IN_PROGRESS`
-   - Vapi API is called to initiate a phone call
-   - On success: Status → `COMPLETED`, call ID is saved
-   - On failure: Status → `FAILED`, error message is saved
-
-## 📱 Testing the Call Workflow
-
-1. **Start both servers** (backend on :8000, frontend on :3000)
-
-2. **Create a test reminder**:
-   - Click "New Reminder"
-   - Enter your phone number in E.164 format (e.g., `+14155551234`)
-   - Set the time to **2-3 minutes in the future**
-   - Enter a title and message
-   - Click "Create Reminder"
-
-3. **Watch the dashboard**:
-   - Status will show "Scheduled" with countdown
-   - When time hits, status changes to "In Progress"
-   - After call completes, status shows "Completed" or "Failed"
-
-4. **Check your phone**:
-   - You'll receive a call from Vapi
-   - An AI assistant will speak your reminder message
-
-## 🔌 API Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/reminders` | List all reminders (with filters) |
-| `POST` | `/api/reminders` | Create a new reminder |
-| `GET` | `/api/reminders/{id}` | Get a specific reminder |
-| `PUT` | `/api/reminders/{id}` | Update a reminder |
-| `DELETE` | `/api/reminders/{id}` | Delete a reminder |
-| `GET` | `/api/stats` | Get reminder statistics |
-
-### Query Parameters for List
-
-- `status`: Filter by status (`scheduled`, `completed`, `failed`, `in_progress`)
-- `search`: Search by title or message
-- `page`: Page number (default: 1)
-- `page_size`: Items per page (default: 20, max: 100)
-
-## 🎨 Design System
-
-### Colors
-
-- **Primary**: Deep blue gradient (`#3294ff` → `#1a73f5`)
-- **Surface**: Slate gray scale for backgrounds and text
-- **Success**: Emerald green for completed states
-- **Danger**: Red for failures and destructive actions
-- **Warning**: Amber for in-progress states
-
-### Components
-
-- **Button**: Multiple variants (primary, secondary, ghost, danger, outline)
-- **Input/Textarea**: With labels, hints, and error states
-- **PhoneInput**: International phone input with country selector and E.164 validation
-- **Select**: Custom styled dropdown
-- **Card**: Elevated, bordered, and glass variants
-- **Badge**: Status indicators with pulse animations
-- **Modal**: Responsive animated dialog (bottom sheet on mobile)
-- **EmptyState**: Decorative empty state with CTA
-- **Skeleton**: Loading placeholders
-
-### Typography
-
-- **Sans**: Outfit (body text)
-- **Display**: Space Grotesk (headings)
-- **Mono**: JetBrains Mono (phone numbers)
-
-## 🐳 Docker Support (Optional)
-
-Create a `docker-compose.yml` in the project root:
-
-```yaml
-version: '3.8'
-
-services:
-  backend:
-    build: ./backend
-    ports:
-      - "8000:8000"
-    environment:
-      - VAPI_API_KEY=${VAPI_API_KEY}
-      - VAPI_PHONE_NUMBER_ID=${VAPI_PHONE_NUMBER_ID}
-    volumes:
-      - ./backend:/app
-
-  frontend:
-    build: ./frontend
-    ports:
-      - "3000:3000"
-    environment:
-      - NEXT_PUBLIC_API_URL=http://backend:8000
-    depends_on:
-      - backend
-```
-
-## 🔧 Troubleshooting
-
-### Call not triggering?
-
-1. Check backend logs for scheduler activity
-2. Verify Vapi credentials in `.env`
-3. Ensure phone number is in E.164 format
-4. Check if reminder time is in the future (UTC)
-
-### Frontend not connecting to backend?
-
-1. Verify backend is running on port 8000
-2. Check CORS settings in `main.py`
-3. Ensure `NEXT_PUBLIC_API_URL` is set correctly
-
-### Vapi call failing?
-
-1. Check Vapi dashboard for error logs
-2. Verify phone number ID is correct
-3. Ensure you have credits in your Vapi account
-
-## 📄 License
-
-MIT
+**Stack:** Next.js 16, Express, Prisma, PostgreSQL, Better Auth, Vapi AI
 
 ---
 
-Built with ❤️ using Next.js, Express, Prisma, and Vapi AI
+## Quick Start
+
+### Prerequisites
+
+- **Node.js** 20+
+- **PostgreSQL** (local, [Neon](https://neon.tech), or [Render](https://render.com))
+- **Vapi account** at [vapi.ai](https://vapi.ai) (users add their own keys in Settings)
+
+### 1. Clone & install
+
+```bash
+git clone <repo-url>
+cd callMeReminder
+
+# Backend
+cd backend && npm install
+cp .example.env .env
+# Edit .env with your values (see Environment Variables below)
+
+# Frontend
+cd ../frontend && npm install
+cp .example.env .env.local
+# Edit .env.local: NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+
+### 2. Database
+
+```bash
+cd backend
+npx prisma db push
+```
+
+### 3. Run both servers
+
+```bash
+# Terminal 1 - Backend
+cd backend && npm run dev
+
+# Terminal 2 - Frontend
+cd frontend && npm run dev
+```
+
+- Frontend: http://localhost:3000  
+- Backend: http://localhost:8000  
+
+---
+
+## Environment Variables
+
+### Backend (`backend/.env`)
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `BETTER_AUTH_SECRET` | Yes | Auth secret. Generate: `openssl rand -base64 32` |
+| `BETTER_AUTH_URL` | Yes | Backend URL. Local: `http://localhost:8000` |
+| `DATABASE_URL` | Yes | PostgreSQL connection string |
+| `CORS_ORIGINS` | No | Comma-separated frontend URLs. Default includes localhost |
+| `BETTER_AUTH_API_KEY` | No | For [Better Auth Dashboard](https://dash.better-auth.com) (activity tracking) |
+| `PORT` | No | Default: 8000 |
+
+**Note:** Vapi API keys are stored per-user in the database. Users add them in Settings after signup. No backend env vars for Vapi.
+
+### Frontend (`frontend/.env.local`)
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `NEXT_PUBLIC_API_URL` | Yes | Backend URL. Local: `http://localhost:8000` |
+| `NEXT_PUBLIC_SITE_URL` | No | For SEO/sitemap. Default: `https://dialcues.com` |
+
+---
+
+## Project Structure
+
+```
+callMeReminder/
+├── frontend/                 # Next.js 16 (App Router)
+│   ├── src/
+│   │   ├── app/              # Routes: /, /dashboard, /login, /signup, /settings, /docs/vapi
+│   │   ├── components/
+│   │   │   ├── ui/           # Button, Input, Card, Modal, etc.
+│   │   │   ├── reminder/     # ReminderForm, ReminderList, ReminderCard
+│   │   │   ├── dashboard/    # FilterTabs, SearchInput, StatsCards
+│   │   │   └── layout/       # Header (with mobile menu)
+│   │   ├── lib/              # api.ts, auth-client.ts, utils.ts, theme-provider
+│   │   └── types/
+│   └── .example.env
+│
+├── backend/
+│   ├── index.js              # Express server, CORS, Better Auth mount
+│   ├── auth.js               # Better Auth config (email/password, dash plugin)
+│   ├── prisma/
+│   │   └── schema.prisma     # User, Session, Reminder, UserSettings
+│   ├── routes/               # /api/reminders, /api/stats, /api/settings
+│   ├── services/
+│   │   ├── scheduler.js     # 15s interval, processes due reminders
+│   │   └── vapi.js           # Vapi API client, initiates calls
+│   ├── middleware/           # Auth middleware for protected routes
+│   └── .example.env
+│
+└── README.md
+```
+
+---
+
+## Key Concepts
+
+### Scheduling
+
+- A **scheduler** runs every 15 seconds (`services/scheduler.js`)
+- Queries reminders where `status = 'scheduled'` and `scheduled_at <= now`
+- For each due reminder: sets `in_progress` → calls Vapi → sets `completed` or `failed`
+- Timezone: reminders store `scheduled_at` in UTC; frontend uses user's timezone for display
+
+### Auth
+
+- **Better Auth** with email/password
+- Session-based (cookies)
+- Protected routes: `/api/reminders`, `/api/stats`, `/api/settings` require auth
+- `AuthGuard` component redirects unauthenticated users to `/login`
+
+### Vapi
+
+- Each user adds their own **Vapi API key** and **Phone Number ID** in Settings
+- Stored in `user_settings` (encrypted/masked in API responses)
+- When a reminder is due, backend fetches the user's Vapi credentials and initiates the call
+- Voice message: *"Hello! This is Dialcues. Your reminder: [title]. [message]. Goodbye!"*
+
+---
+
+## API Reference
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/reminders` | Yes | List reminders. Query: `status`, `search`, `page`, `page_size` |
+| POST | `/api/reminders` | Yes | Create reminder |
+| GET | `/api/reminders/:id` | Yes | Get reminder |
+| PUT | `/api/reminders/:id` | Yes | Update reminder |
+| DELETE | `/api/reminders/:id` | Yes | Delete reminder |
+| GET | `/api/stats` | Yes | Reminder counts by status |
+| GET | `/api/settings` | Yes | User's Vapi config (masked) |
+| PUT | `/api/settings` | Yes | Update Vapi config |
+| POST | `/api/settings/test` | Yes | Test Vapi credentials |
+
+Auth routes: `POST /api/auth/*` (handled by Better Auth)
+
+---
+
+## Commands
+
+| Command | Where | Description |
+|---------|-------|-------------|
+| `npm run dev` | backend | Start API with hot reload |
+| `npm run dev` | frontend | Start Next.js dev server |
+| `npm run build` | frontend | Production build |
+| `npx prisma db push` | backend | Sync schema to DB (no migrations) |
+| `npx prisma studio` | backend | Open Prisma Studio (DB GUI) |
+
+---
+
+## Testing the Call Flow
+
+1. Start backend and frontend
+2. Sign up or log in
+3. Go to **Settings** → add your Vapi API key and Phone Number ID (see in-app guide)
+4. Create a reminder: set time 2–3 minutes in the future, use your real phone number (E.164)
+5. Wait for the call—status will change from Scheduled → In Progress → Completed
+
+---
+
+## Troubleshooting
+
+| Issue | Check |
+|-------|-------|
+| Call not triggering | Backend logs for scheduler; reminder time in future (UTC); user has Vapi keys in Settings |
+| Frontend can't reach backend | `NEXT_PUBLIC_API_URL` correct; backend on 8000; CORS includes frontend URL |
+| Login/signup fails | `BETTER_AUTH_SECRET` set; `BETTER_AUTH_URL` matches backend URL; DB connected |
+| Vapi call fails | Vapi dashboard logs; correct Phone Number ID; account has credits |
+| Build errors | `npm install` in both folders; Node 20+ |
+
+---
+
+## Deployment
+
+- **Frontend:** Vercel (connect repo, set `NEXT_PUBLIC_API_URL` to backend URL)
+- **Backend:** Render, Railway, or similar (Node, set env vars, `npm start`)
+- **Database:** Render PostgreSQL, Neon, or Supabase
+- Ensure `CORS_ORIGINS` includes your production frontend URL
+
+---
+
+## Design System
+
+- **Colors:** Primary `#2563eb`, Secondary `#06b6d4`, Accent `#22c55e`, Dark `#0f172a`, Light `#f8fafc`
+- **Fonts:** Outfit (body), Space Grotesk (headings), JetBrains Mono (code)
+- **Components:** See `frontend/src/components/ui/` for Button, Input, Card, Modal, etc.

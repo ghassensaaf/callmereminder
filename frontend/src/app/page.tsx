@@ -22,7 +22,7 @@ export default function LandingPage() {
                 <Phone className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
               </div>
               <span className="font-display font-bold text-base sm:text-lg text-surface-900 dark:text-surface-50 truncate">
-                CallMe<span className="hidden sm:inline"> Reminder</span>
+                Dialcues
               </span>
             </Link>
             <nav className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
@@ -72,7 +72,7 @@ export default function LandingPage() {
       <section className="py-24 px-4 sm:px-6 lg:px-8 border-t border-surface-200 dark:border-surface-800">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl font-display font-bold text-center text-surface-900 dark:text-surface-50 mb-16">
-            Why CallMe Reminder?
+            Why Dialcues?
           </h2>
           <div className="grid md:grid-cols-3 gap-12">
             <FeatureCard
@@ -118,7 +118,7 @@ export default function LandingPage() {
       <footer className="py-8 px-4 sm:px-6 lg:px-8 border-t border-surface-200 dark:border-surface-800">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <span className="text-surface-500 dark:text-surface-400 text-sm">
-            © {new Date().getFullYear()} CallMe Reminder. All rights reserved.
+            © {new Date().getFullYear()} Dialcues. All rights reserved.
           </span>
           <div className="flex gap-6">
             <Link

@@ -63,7 +63,7 @@ export default function LoginPage() {
             <Phone className="h-6 w-6 text-white" />
           </div>
           <span className="font-display font-bold text-xl text-surface-900 dark:text-surface-50">
-            CallMe Reminder
+            Dialcues
           </span>
         </Link>
 

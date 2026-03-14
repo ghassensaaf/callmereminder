@@ -67,10 +67,7 @@ export function Header({ onCreateClick }: HeaderProps) {
             </div>
             <div className="min-w-0">
               <span className="font-display font-bold text-base sm:text-lg text-surface-900 dark:text-surface-50 truncate">
-                CallMe
-              </span>
-              <span className="hidden sm:inline text-surface-500 dark:text-surface-400 font-medium ml-1">
-                Reminder
+                Dialcues
               </span>
             </div>
           </Link>

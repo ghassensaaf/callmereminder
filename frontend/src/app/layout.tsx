@@ -25,13 +25,13 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://callmereminder.com";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://dialcues.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "CallMe Reminder | Never Miss a Moment",
-    template: "%s | CallMe Reminder",
+    default: "Dialcues | Never Miss a Moment",
+    template: "%s | Dialcues",
   },
   description:
     "Smart phone call reminders that speak to you at the right time. Get AI-powered voice calls instead of silent notifications—never miss important moments again.",
@@ -44,14 +44,14 @@ export const metadata: Metadata = {
     "call reminder",
     "smart reminders",
   ],
-  authors: [{ name: "CallMe Reminder" }],
-  creator: "CallMe Reminder",
+  authors: [{ name: "Dialcues" }],
+  creator: "Dialcues",
   openGraph: {
     type: "website",
     locale: "en_US",
     url: siteUrl,
-    siteName: "CallMe Reminder",
-    title: "CallMe Reminder | Never Miss a Moment",
+    siteName: "Dialcues",
+    title: "Dialcues | Never Miss a Moment",
     description:
       "Smart phone call reminders that speak to you at the right time. Get AI-powered voice calls instead of silent notifications.",
     images: [
@@ -59,13 +59,13 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "CallMe Reminder - Smart voice call reminders",
+        alt: "Dialcues - Smart voice call reminders",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "CallMe Reminder | Never Miss a Moment",
+    title: "Dialcues | Never Miss a Moment",
     description: "Smart phone call reminders that speak to you at the right time.",
     images: ["/og-image.png"],
   },
@@ -87,8 +87,8 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#3294ff" },
-    { media: "(prefers-color-scheme: dark)", color: "#1a73f5" },
+    { media: "(prefers-color-scheme: light)", color: "#2563eb" },
+    { media: "(prefers-color-scheme: dark)", color: "#2563eb" },
   ],
 };
 

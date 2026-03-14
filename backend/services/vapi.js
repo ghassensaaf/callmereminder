@@ -59,7 +59,7 @@ IMPORTANT INSTRUCTIONS:
 4. End the call IMMEDIATELY after delivering the message by calling the endCall function
 
 Deliver this message:
-"Hello! This is CallMe Reminder. Your reminder: ${reminderTitle}. ${message}. Goodbye!"
+"Hello! This is Dialcues. Your reminder: ${reminderTitle}. ${message}. Goodbye!"
 
 After saying this, immediately end the call using the endCall function.`,
           },
@@ -69,7 +69,7 @@ After saying this, immediately end the call using the endCall function.`,
         provider: "11labs",
         voiceId: "21m00Tcm4TlvDq8ikWAM",
       },
-      firstMessage: `Hello! This is CallMe Reminder. Your reminder: ${message}. Goodbye!`,
+      firstMessage: `Hello! This is Dialcues. Your reminder: ${message}. Goodbye!`,
       endCallFunctionEnabled: true,
       maxDurationSeconds: 60,
       silenceTimeoutSeconds: 10,

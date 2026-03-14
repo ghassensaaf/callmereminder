@@ -39,7 +39,7 @@ app.use(express.json());
 
 // Root & health
 app.get("/", (_, res) => {
-  res.json({ message: "CallMe Reminder API", version: "1.0.0" });
+  res.json({ message: "Dialcues API", version: "1.0.0" });
 });
 
 app.get("/health", (_, res) => {
