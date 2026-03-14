@@ -1,22 +1,40 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Plus } from "lucide-react";
 
 import { Header } from "@/components/layout";
 import { AuthGuard } from "@/components/auth-guard";
 import { FilterTabs, SearchInput, VapiConfigWarning } from "@/components/dashboard";
-import { ReminderForm, ReminderList, StatsCards } from "@/components/reminder";
+import { ReminderForm, ReminderList, ExecutionList, StatsCards } from "@/components/reminder";
 import { Button, Modal } from "@/components/ui";
 import { ReminderStatus } from "@/types/reminder";
 
-type FilterOption = ReminderStatus | "all";
+type FilterOption = ReminderStatus | "all" | "history";
 
 export default function DashboardPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [filter, setFilter] = useState<FilterOption>("all");
   const [search, setSearch] = useState("");
+  const [historyDateFrom, setHistoryDateFrom] = useState("");
+  const [historyDateTo, setHistoryDateTo] = useState("");
+  const [listDateFrom, setListDateFrom] = useState("");
+  const [listDateTo, setListDateTo] = useState("");
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "n" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setIsCreateModalOpen(true);
+      }
+      if (e.key === "Escape") {
+        setIsCreateModalOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   return (
     <AuthGuard>
@@ -43,6 +61,7 @@ export default function DashboardPage() {
             onClick={() => setIsCreateModalOpen(true)}
             leftIcon={<Plus className="h-4 w-4" />}
             className="w-full sm:w-auto shrink-0"
+            title="Shortcut: Ctrl+N or Cmd+N"
           >
             New Reminder
           </Button>
@@ -73,12 +92,68 @@ export default function DashboardPage() {
           />
         </motion.div>
 
-        {/* Reminder List */}
-        <ReminderList
-          status={filter}
-          search={search}
-          onCreateClick={() => setIsCreateModalOpen(true)}
-        />
+        {/* Reminder List or History */}
+        {filter === "history" ? (
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-center gap-4">
+              <label className="text-sm text-surface-600 dark:text-surface-400">
+                From:{" "}
+                <input
+                  type="date"
+                  value={historyDateFrom}
+                  onChange={(e) => setHistoryDateFrom(e.target.value)}
+                  className="ml-2 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 px-3 py-1.5 text-sm"
+                />
+              </label>
+              <label className="text-sm text-surface-600 dark:text-surface-400">
+                To:{" "}
+                <input
+                  type="date"
+                  value={historyDateTo}
+                  onChange={(e) => setHistoryDateTo(e.target.value)}
+                  className="ml-2 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 px-3 py-1.5 text-sm"
+                />
+              </label>
+            </div>
+            <ExecutionList
+              dateFrom={historyDateFrom || undefined}
+              dateTo={historyDateTo || undefined}
+              onCreateClick={() => setIsCreateModalOpen(true)}
+            />
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {(filter === "completed" || filter === "failed" || filter === "all") && (
+              <div className="flex flex-wrap items-center gap-4">
+                <label className="text-sm text-surface-600 dark:text-surface-400">
+                  From:{" "}
+                  <input
+                    type="date"
+                    value={listDateFrom}
+                    onChange={(e) => setListDateFrom(e.target.value)}
+                    className="ml-2 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 px-3 py-1.5 text-sm"
+                  />
+                </label>
+                <label className="text-sm text-surface-600 dark:text-surface-400">
+                  To:{" "}
+                  <input
+                    type="date"
+                    value={listDateTo}
+                    onChange={(e) => setListDateTo(e.target.value)}
+                    className="ml-2 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 px-3 py-1.5 text-sm"
+                  />
+                </label>
+              </div>
+            )}
+            <ReminderList
+              status={filter}
+              search={search}
+              dateFrom={listDateFrom || undefined}
+              dateTo={listDateTo || undefined}
+              onCreateClick={() => setIsCreateModalOpen(true)}
+            />
+          </div>
+        )}
       </main>
 
       {/* Create Reminder Modal */}

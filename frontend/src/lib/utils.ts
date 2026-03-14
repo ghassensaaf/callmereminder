@@ -1,7 +1,20 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { formatDistanceToNow, format, parseISO, isPast, differenceInMinutes } from "date-fns";
-import { formatInTimeZone } from "date-fns-tz";
+import {
+  formatDistanceToNow,
+  format,
+  parseISO,
+  isPast,
+  differenceInMinutes,
+  addMinutes,
+  addHours,
+  addDays,
+  setHours,
+  setMinutes,
+  nextMonday,
+  startOfDay,
+} from "date-fns";
+import { formatInTimeZone, utcToZonedTime } from "date-fns-tz";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -162,8 +175,67 @@ export function toLocalDateTimeString(date: Date): string {
  * @param dateTimeString - The datetime string from datetime-local input (e.g., "2024-01-21T15:30")
  * @returns The datetime string with seconds added
  */
+export function formatRecurrencePreview(
+  recurrenceType: string | null | undefined,
+  recurrenceConfig: string | null | undefined,
+  scheduledAt: string,
+  timezone?: string
+): string {
+  if (!recurrenceType) return "";
+  const date = parseISO(scheduledAt);
+  const tz = timezone || "UTC";
+  const timeStr = formatInTimeZone(date, tz, "h:mm a");
+  if (recurrenceType === "daily") return `Daily at ${timeStr}`;
+  if (recurrenceType === "weekly") {
+    const day = formatInTimeZone(date, tz, "EEEE");
+    return `${day}s at ${timeStr}`;
+  }
+  if (recurrenceType === "custom" && recurrenceConfig) {
+    try {
+      const c = typeof recurrenceConfig === "string" ? JSON.parse(recurrenceConfig) : recurrenceConfig;
+      if (c.interval_days) return `Every ${c.interval_days} days at ${timeStr}`;
+      const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      const w = (c.weekdays ?? []).map((d: number) => days[d]).filter(Boolean);
+      if (w.length) return `${w.join(", ")} at ${timeStr}`;
+    } catch {}
+  }
+  return `Recurring at ${timeStr}`;
+}
+
 export function formatDateTimeForApi(dateTimeString: string): string {
   // datetime-local gives "2024-01-21T15:30", we return as-is
   // Backend will interpret this in the context of the provided timezone
   return dateTimeString + ":00";
+}
+
+/**
+ * Compute preset dates in the given timezone and return datetime-local string for the form.
+ */
+export function getPresetDateTime(
+  preset: "15min" | "1hour" | "tomorrow9" | "nextMonday9",
+  timezone: string
+): string {
+  const tz = timezone || detectTimezone();
+  const now = new Date();
+  const zonedNow = utcToZonedTime(now, tz);
+
+  let zonedDate: Date;
+  switch (preset) {
+    case "15min":
+      zonedDate = addMinutes(zonedNow, 15);
+      break;
+    case "1hour":
+      zonedDate = addHours(zonedNow, 1);
+      break;
+    case "tomorrow9":
+      zonedDate = setMinutes(setHours(addDays(startOfDay(zonedNow), 1), 9), 0);
+      break;
+    case "nextMonday9":
+      zonedDate = setMinutes(setHours(nextMonday(startOfDay(zonedNow)), 9), 0);
+      break;
+    default:
+      zonedDate = zonedNow;
+  }
+
+  return format(zonedDate, "yyyy-MM-dd'T'HH:mm");
 }

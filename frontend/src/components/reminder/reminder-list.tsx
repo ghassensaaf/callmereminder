@@ -1,7 +1,9 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { Bell, Search, AlertTriangle } from "lucide-react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
+import { Bell, Search, AlertTriangle, Trash2 } from "lucide-react";
 
 import { ReminderCard } from "./reminder-card";
 import { SkeletonCard, EmptyState, Button } from "@/components/ui";
@@ -11,29 +13,54 @@ import { ReminderStatus } from "@/types/reminder";
 interface ReminderListProps {
   status?: ReminderStatus | "all";
   search?: string;
+  dateFrom?: string;
+  dateTo?: string;
   onCreateClick?: () => void;
 }
 
 export function ReminderList({
   status,
   search,
+  dateFrom,
+  dateTo,
   onCreateClick,
 }: ReminderListProps) {
+  const queryClient = useQueryClient();
+
+  const sort =
+    status === "completed" || status === "failed" || status === "paused" ? "updated_at_desc" : "scheduled_at_asc";
+
   const {
     data,
     isLoading,
     isError,
     refetch,
   } = useQuery({
-    queryKey: ["reminders", status, search],
+    queryKey: ["reminders", status, search, sort, dateFrom, dateTo],
     queryFn: () =>
       remindersApi.list({
         status: status && status !== "all" ? status : undefined,
         search: search || undefined,
+        sort,
+        date_from: dateFrom,
+        date_to: dateTo,
         page_size: 50,
       }),
-    refetchInterval: 10000, // Refetch every 10 seconds to update countdown
+    refetchInterval: 10000,
   });
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: (ids: number[]) => remindersApi.bulkDelete(ids),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["reminders"] });
+      queryClient.invalidateQueries({ queryKey: ["stats"] });
+      toast.success(`Deleted ${data.deleted} reminder${data.deleted === 1 ? "" : "s"}`);
+    },
+    onError: () => toast.error("Failed to delete"),
+  });
+
+  const completableItems = data?.items.filter((r) => r.status === "completed" || r.status === "failed") ?? [];
+  const showBulkDelete = (status === "completed" || status === "failed" || status === "all") && completableItems.length > 0;
 
   if (isLoading) {
     return (
@@ -81,6 +108,7 @@ export function ReminderList({
     if (status && status !== "all") {
       const statusLabels: Record<string, string> = {
         scheduled: "scheduled",
+        paused: "paused",
         completed: "completed",
         failed: "failed",
         in_progress: "in progress",
@@ -120,10 +148,28 @@ export function ReminderList({
   }
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {data.items.map((reminder, index) => (
-        <ReminderCard key={reminder.id} reminder={reminder} index={index} />
-      ))}
+    <div className="space-y-4">
+      {showBulkDelete && (
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            leftIcon={<Trash2 className="h-3.5 w-3.5" />}
+            onClick={() => {
+              const ids = completableItems.map((r) => r.id);
+              if (ids.length) bulkDeleteMutation.mutate(ids);
+            }}
+            isLoading={bulkDeleteMutation.isPending}
+          >
+            Clear all completed & failed
+          </Button>
+        </div>
+      )}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {data.items.map((reminder, index) => (
+          <ReminderCard key={reminder.id} reminder={reminder} index={index} />
+        ))}
+      </div>
     </div>
   );
 }

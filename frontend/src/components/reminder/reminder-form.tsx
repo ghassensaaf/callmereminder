@@ -1,24 +1,26 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { Clock, MessageSquare, Calendar } from "lucide-react";
+import { Clock, MessageSquare, Calendar, Repeat, FileText } from "lucide-react";
 import { motion } from "framer-motion";
 import { isValidPhoneNumber } from "libphonenumber-js";
 
 import { Button, Input, Textarea, Select, PhoneInput } from "@/components/ui";
-import { remindersApi } from "@/lib/api";
+import { remindersApi, templatesApi } from "@/lib/api";
 import {
   getTimezones,
   detectTimezone,
   toLocalDateTimeString,
   formatDateTimeForApi,
+  getPresetDateTime,
 } from "@/lib/utils";
-import { Reminder, ReminderCreate, ReminderUpdate } from "@/types/reminder";
+import { Reminder, ReminderCreate, ReminderUpdate, RecurrenceType } from "@/types/reminder";
 
 const reminderSchema = z.object({
   title: z
@@ -44,6 +46,9 @@ const reminderSchema = z.object({
     ),
   scheduled_at: z.string().min(1, "Please select a date and time"),
   timezone: z.string().min(1, "Please select your timezone"),
+  recurrence_type: z.enum(["daily", "weekly", "custom"]).optional().nullable(),
+  recurrence_config: z.string().optional().nullable(),
+  recurrence_end_at: z.string().optional().nullable(),
 });
 
 type ReminderFormData = z.infer<typeof reminderSchema>;
@@ -63,6 +68,21 @@ export function ReminderForm({
   const isEditing = !!reminder;
   const phoneInteracted = useRef(false);
 
+  const { data: templates, refetch: refetchTemplates } = useQuery({
+    queryKey: ["templates"],
+    queryFn: () => templatesApi.list(),
+  });
+
+  const saveTemplateMutation = useMutation({
+    mutationFn: (data: { title: string; message: string }) => templatesApi.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["templates"] });
+      refetchTemplates();
+      toast.success("Saved as template");
+    },
+    onError: () => toast.error("Failed to save template"),
+  });
+
   const {
     register,
     handleSubmit,
@@ -81,6 +101,11 @@ export function ReminderForm({
         ? toLocalDateTimeString(new Date(reminder.scheduled_at))
         : "",
       timezone: reminder?.timezone || detectTimezone(),
+      recurrence_type: (reminder?.recurrence_type as RecurrenceType) || null,
+      recurrence_config: reminder?.recurrence_config || null,
+      recurrence_end_at: reminder?.recurrence_end_at
+        ? new Date(reminder.recurrence_end_at).toISOString().slice(0, 10)
+        : null,
     },
   });
 
@@ -130,15 +155,27 @@ export function ReminderForm({
       return;
     }
 
-    const payload = {
+    const base = {
       ...data,
       scheduled_at: scheduledDateTime,
     };
+    const recurrence = data.recurrence_type
+      ? {
+          recurrence_type: data.recurrence_type,
+          recurrence_config:
+            data.recurrence_type === "custom" && data.recurrence_config
+              ? typeof data.recurrence_config === "string"
+                ? data.recurrence_config
+                : JSON.stringify(data.recurrence_config)
+              : null,
+          recurrence_end_at: data.recurrence_end_at ? data.recurrence_end_at + "T23:59:59" : null,
+        }
+      : { recurrence_type: null, recurrence_config: null, recurrence_end_at: null };
 
     if (isEditing) {
-      await updateMutation.mutateAsync(payload);
+      await updateMutation.mutateAsync({ ...base, ...recurrence });
     } else {
-      await createMutation.mutateAsync(payload);
+      await createMutation.mutateAsync({ ...base, ...recurrence } as ReminderCreate);
     }
   };
 
@@ -154,6 +191,32 @@ export function ReminderForm({
       transition={{ duration: 0.3 }}
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
+        {/* Templates */}
+        {!isEditing && templates?.length && (
+          <div className="space-y-2">
+            <span className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Use template
+            </span>
+            <div className="flex flex-wrap gap-2">
+              {templates.map((t) => (
+                <Button
+                  key={t.id}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setValue("title", t.title, { shouldValidate: true });
+                    setValue("message", t.message, { shouldValidate: true });
+                  }}
+                >
+                  {t.title}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Title */}
         <Input
           label="Reminder Title"
@@ -164,14 +227,33 @@ export function ReminderForm({
         />
 
         {/* Message */}
-        <Textarea
-          label="Reminder Message"
-          placeholder="The message that will be spoken when you receive the call..."
-          hint="This is what you'll hear when the reminder calls you"
-          error={errors.message?.message}
-          rows={4}
-          {...register("message")}
-        />
+        <div className="space-y-2">
+          <Textarea
+            label="Reminder Message"
+            placeholder="The message that will be spoken when you receive the call..."
+            hint="This is what you'll hear when the reminder calls you"
+            error={errors.message?.message}
+            rows={4}
+            {...register("message")}
+          />
+          {watch("title")?.trim() && watch("message")?.trim() && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() =>
+                saveTemplateMutation.mutate({
+                  title: watch("title")!.trim(),
+                  message: watch("message")!.trim(),
+                })
+              }
+              isLoading={saveTemplateMutation.isPending}
+              leftIcon={<FileText className="h-3.5 w-3.5" />}
+            >
+              Save as template
+            </Button>
+          )}
+        </div>
 
         {/* Phone Number */}
         <PhoneInput
@@ -193,6 +275,30 @@ export function ReminderForm({
           }}
         />
 
+        {/* Quick presets */}
+        <div className="space-y-2">
+          <span className="text-sm font-medium text-muted-foreground">Quick presets</span>
+          <div className="flex flex-wrap gap-2">
+            {(["15min", "1hour", "tomorrow9", "nextMonday9"] as const).map((preset) => (
+              <Button
+                key={preset}
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const tz = watch("timezone") || detectTimezone();
+                  setValue("scheduled_at", getPresetDateTime(preset, tz), { shouldValidate: true });
+                }}
+              >
+                {preset === "15min" && "In 15 min"}
+                {preset === "1hour" && "In 1 hour"}
+                {preset === "tomorrow9" && "Tomorrow 9:00"}
+                {preset === "nextMonday9" && "Next Monday 9:00"}
+              </Button>
+            ))}
+          </div>
+        </div>
+
         {/* Date/Time and Timezone */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input
@@ -204,12 +310,125 @@ export function ReminderForm({
             {...register("scheduled_at")}
           />
 
-          <Select
-            label="Timezone"
-            options={getTimezones()}
-            error={errors.timezone?.message}
-            {...register("timezone")}
-          />
+          <div className="space-y-2">
+            <Select
+              label="Timezone"
+              options={getTimezones()}
+              error={errors.timezone?.message}
+              {...register("timezone")}
+            />
+            {watch("timezone") === detectTimezone() && (
+              <p className="text-xs text-muted-foreground">Using your detected timezone</p>
+            )}
+          </div>
+        </div>
+
+        {/* Recurrence */}
+        <div className="space-y-2">
+          <span className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+            <Repeat className="h-4 w-4" />
+            Recurrence
+          </span>
+          <div className="flex flex-wrap gap-2">
+            {(["none", "daily", "weekly", "custom"] as const).map((opt) => (
+              <Button
+                key={opt}
+                type="button"
+                variant={watch("recurrence_type") === (opt === "none" ? null : opt) ? "primary" : "outline"}
+                size="sm"
+                onClick={() => {
+                  setValue("recurrence_type", opt === "none" ? null : opt, { shouldValidate: false });
+                  if (opt !== "custom") setValue("recurrence_config", null, { shouldValidate: false });
+                }}
+              >
+                {opt === "none" && "One-time"}
+                {opt === "daily" && "Daily"}
+                {opt === "weekly" && "Weekly"}
+                {opt === "custom" && "Custom"}
+              </Button>
+            ))}
+          </div>
+          {watch("recurrence_type") === "custom" && (
+            <div className="space-y-3 pt-2">
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={!watch("recurrence_config")?.includes("interval_days") ? "primary" : "outline"}
+                  size="sm"
+                  onClick={() => setValue("recurrence_config", JSON.stringify({ weekdays: [] }), { shouldValidate: false })}
+                >
+                  Specific days
+                </Button>
+                <Button
+                  type="button"
+                  variant={watch("recurrence_config")?.includes("interval_days") ? "primary" : "outline"}
+                  size="sm"
+                  onClick={() => setValue("recurrence_config", JSON.stringify({ interval_days: 3 }), { shouldValidate: false })}
+                >
+                  Every N days
+                </Button>
+              </div>
+              {watch("recurrence_config")?.includes("interval_days") ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">Every</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={30}
+                    className="w-16 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 px-2 py-1 text-sm"
+                    value={(() => {
+                      try {
+                        const c = JSON.parse(watch("recurrence_config") || "{}");
+                        return c.interval_days ?? 3;
+                      } catch {
+                        return 3;
+                      }
+                    })()}
+                    onChange={(e) => {
+                      const n = Math.max(1, Math.min(30, parseInt(e.target.value, 10) || 1));
+                      setValue("recurrence_config", JSON.stringify({ interval_days: n }), { shouldValidate: false });
+                    }}
+                  />
+                  <span className="text-sm">days</span>
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {[0, 1, 2, 3, 4, 5, 6].map((d) => {
+                    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+                    const config = watch("recurrence_config");
+                    let weekdays: number[] = [];
+                    try {
+                      weekdays = config ? (typeof config === "string" ? JSON.parse(config) : config).weekdays ?? [] : [];
+                    } catch {}
+                    const isSelected = weekdays.includes(d);
+                    return (
+                      <Button
+                        key={d}
+                        type="button"
+                        variant={isSelected ? "primary" : "outline"}
+                        size="sm"
+                        onClick={() => {
+                          const next = isSelected ? weekdays.filter((x) => x !== d) : [...weekdays, d].sort((a, b) => a - b);
+                          setValue("recurrence_config", JSON.stringify({ weekdays: next }), { shouldValidate: false });
+                        }}
+                      >
+                        {days[d]}
+                      </Button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+          {watch("recurrence_type") && (
+            <div className="pt-2">
+              <Input
+                type="date"
+                label="End date (optional)"
+                {...register("recurrence_end_at")}
+              />
+            </div>
+          )}
         </div>
 
         {/* Actions */}
