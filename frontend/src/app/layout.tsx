@@ -1,6 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Outfit, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import { Toaster } from "react-hot-toast";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { QueryProvider } from "@/lib/query-provider";
 import { ThemeProvider } from "@/lib/theme-provider";
 import "./globals.css";
@@ -23,9 +25,71 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://callmereminder.com";
+
 export const metadata: Metadata = {
-  title: "CallMe Reminder | Never Miss a Moment",
-  description: "Smart phone call reminders that speak to you at the right time",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "CallMe Reminder | Never Miss a Moment",
+    template: "%s | CallMe Reminder",
+  },
+  description:
+    "Smart phone call reminders that speak to you at the right time. Get AI-powered voice calls instead of silent notifications—never miss important moments again.",
+  keywords: [
+    "reminder app",
+    "voice reminders",
+    "phone call reminders",
+    "AI reminders",
+    "never forget",
+    "call reminder",
+    "smart reminders",
+  ],
+  authors: [{ name: "CallMe Reminder" }],
+  creator: "CallMe Reminder",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: siteUrl,
+    siteName: "CallMe Reminder",
+    title: "CallMe Reminder | Never Miss a Moment",
+    description:
+      "Smart phone call reminders that speak to you at the right time. Get AI-powered voice calls instead of silent notifications.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "CallMe Reminder - Smart voice call reminders",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CallMe Reminder | Never Miss a Moment",
+    description: "Smart phone call reminders that speak to you at the right time.",
+    images: ["/og-image.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
+  },
+  alternates: {
+    canonical: siteUrl,
+  },
+  category: "productivity",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#3294ff" },
+    { media: "(prefers-color-scheme: dark)", color: "#1a73f5" },
+  ],
 };
 
 export default function RootLayout({
@@ -97,6 +161,9 @@ export default function RootLayout({
             </div>
 
             {children}
+
+            <Analytics />
+            <SpeedInsights />
 
             <Toaster
               position="bottom-right"

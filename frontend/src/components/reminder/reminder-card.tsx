@@ -196,10 +196,10 @@ export function ReminderCard({ reminder, index = 0 }: ReminderCardProps) {
 
             {/* Error message if failed */}
             {reminder.status === "failed" && reminder.error_message && (
-              <div className="mt-3 p-3 bg-danger-50 dark:bg-danger-500/10 rounded-lg border border-danger-100 dark:border-danger-500/20">
+              <div className="mt-3 p-3 bg-danger-50 dark:bg-danger-950/30 rounded-lg border border-danger-100 dark:border-danger-800/50">
                 <div className="flex items-start gap-2">
-                  <AlertCircle className="h-4 w-4 text-danger-500 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-danger-700 dark:text-danger-500">
+                  <AlertCircle className="h-4 w-4 text-danger-500 dark:text-danger-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-danger-700 dark:text-danger-300">
                     {formatErrorMessage(reminder.error_message)}
                   </p>
                 </div>
@@ -224,7 +224,7 @@ export function ReminderCard({ reminder, index = 0 }: ReminderCardProps) {
                   size="sm"
                   onClick={() => setIsDeleteConfirmOpen(true)}
                   leftIcon={<Trash2 className="h-3.5 w-3.5" />}
-                  className="text-danger-600 hover:text-danger-700 dark:text-danger-500 dark:hover:text-danger-400 hover:bg-danger-50 dark:hover:bg-danger-500/10"
+                  className="text-danger-600 hover:text-danger-700 dark:text-danger-400 dark:hover:text-danger-300 hover:bg-danger-50 dark:hover:bg-danger-950/30"
                 >
                   Delete
                 </Button>
@@ -236,7 +236,7 @@ export function ReminderCard({ reminder, index = 0 }: ReminderCardProps) {
                 size="sm"
                 onClick={() => setIsDeleteConfirmOpen(true)}
                 leftIcon={<Trash2 className="h-3.5 w-3.5" />}
-                className="text-danger-600 hover:text-danger-700 dark:text-danger-500 dark:hover:text-danger-400 hover:bg-danger-50 dark:hover:bg-danger-500/10"
+                className="text-danger-600 hover:text-danger-700 dark:text-danger-400 dark:hover:text-danger-300 hover:bg-danger-50 dark:hover:bg-danger-950/30"
               >
                 Delete
               </Button>

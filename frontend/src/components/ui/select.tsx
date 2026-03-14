@@ -70,7 +70,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
           <p
             className={cn(
               "mt-1.5 text-xs",
-              error ? "text-danger-500" : "text-surface-500 dark:text-surface-400"
+              error ? "text-danger-600 dark:text-danger-400" : "text-surface-500 dark:text-surface-400"
             )}
           >
             {error || hint}

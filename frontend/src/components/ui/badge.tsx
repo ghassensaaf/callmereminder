@@ -38,7 +38,7 @@ const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
         "bg-success-50 dark:bg-success-500/10 text-success-600 dark:text-success-500 border-success-100 dark:border-success-500/20",
       warning:
         "bg-warning-50 dark:bg-warning-500/10 text-warning-600 dark:text-warning-500 border-warning-100 dark:border-warning-500/20",
-      danger: "bg-danger-50 dark:bg-danger-500/10 text-danger-600 dark:text-danger-500 border-danger-100 dark:border-danger-500/20",
+      danger: "bg-danger-50 dark:bg-danger-950/30 text-danger-600 dark:text-danger-400 border-danger-100 dark:border-danger-800/50",
       info: "bg-primary-50 dark:bg-primary-950/50 text-primary-600 dark:text-primary-400 border-primary-100 dark:border-primary-800",
       outline: "bg-transparent border-surface-300 dark:border-surface-600 text-surface-600 dark:text-surface-400",
     };

@@ -118,8 +118,8 @@ export function StatsCards() {
         label="Failed"
         value={stats.failed}
         icon={<AlertCircle className="h-5 w-5" />}
-        color="text-danger-600 dark:text-danger-500"
-        bgColor="bg-danger-50 dark:bg-danger-500/10"
+        color="text-danger-600 dark:text-danger-400"
+        bgColor="bg-danger-50 dark:bg-danger-950/30"
         delay={0.3}
       />
     </div>

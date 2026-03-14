@@ -23,7 +23,7 @@ export function Header({ onCreateClick }: HeaderProps) {
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 group">
+          <Link href={session ? "/dashboard" : "/"} className="flex items-center gap-3 group">
             <div className="relative">
               <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 shadow-lg shadow-primary-500/25 group-hover:shadow-primary-500/40 transition-shadow">
                 <Phone className="h-5 w-5 text-white" />
@@ -45,7 +45,7 @@ export function Header({ onCreateClick }: HeaderProps) {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-1">
-            <NavLink href="/" active>
+            <NavLink href="/dashboard" active>
               Dashboard
             </NavLink>
           </nav>

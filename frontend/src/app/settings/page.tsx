@@ -110,11 +110,11 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen">
-      <Header onCreateClick={() => router.push("/")} />
+      <Header onCreateClick={() => router.push("/dashboard")} />
 
       <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Link
-          href="/"
+          href="/dashboard"
           className="inline-flex items-center gap-2 text-surface-500 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-100 mb-6"
         >
           <ArrowLeft className="h-4 w-4" />

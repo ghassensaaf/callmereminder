@@ -23,13 +23,13 @@ export default function SignupPage() {
         name,
         email,
         password,
-        callbackURL: "/",
+        callbackURL: "/dashboard",
       });
       if (result.error) {
         setError(result.error.message || "Invalid input");
         return;
       }
-      window.location.href = "/";
+      window.location.href = "/dashboard";
     } catch (err) {
       setError("Something went wrong");
     } finally {
@@ -63,7 +63,7 @@ export default function SignupPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="p-3 rounded-lg bg-danger-50 dark:bg-danger-950/50 text-danger-700 dark:text-danger-400 text-sm">
+              <div className="p-3 rounded-lg bg-danger-50 dark:bg-danger-950/30 text-danger-700 dark:text-danger-300 text-sm">
                 {error}
               </div>
             )}
