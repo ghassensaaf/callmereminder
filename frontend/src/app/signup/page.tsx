@@ -3,37 +3,57 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { signUp } from "@/lib/auth-client";
 import { Button, Input, Card } from "@/components/ui";
 import { Phone } from "lucide-react";
 
-export default function SignupPage() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+const signupSchema = z.object({
+  name: z
+    .string()
+    .min(1, "Please enter your name")
+    .max(100, "Name must be 100 characters or less"),
+  email: z
+    .string()
+    .min(1, "Please enter your email address")
+    .email("Please enter a valid email address"),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .max(128, "Password must be 128 characters or less"),
+});
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+type SignupFormData = z.infer<typeof signupSchema>;
+
+export default function SignupPage() {
+  const [apiError, setApiError] = useState("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<SignupFormData>({
+    resolver: zodResolver(signupSchema),
+    mode: "onBlur",
+  });
+
+  async function onSubmit(data: SignupFormData) {
+    setApiError("");
     try {
       const result = await signUp.email({
-        name,
-        email,
-        password,
+        name: data.name,
+        email: data.email,
+        password: data.password,
         callbackURL: "/dashboard",
       });
       if (result.error) {
-        setError(result.error.message || "Invalid input");
+        setApiError(result.error.message || "Invalid input. Please check your details.");
         return;
       }
       window.location.href = "/dashboard";
-    } catch (err) {
-      setError("Something went wrong");
-    } finally {
-      setLoading(false);
+    } catch {
+      setApiError("Something went wrong. Please try again.");
     }
   }
 
@@ -61,42 +81,39 @@ export default function SignupPage() {
             Get started with voice call reminders
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+            {apiError && (
               <div className="p-3 rounded-lg bg-danger-50 dark:bg-danger-950/30 text-danger-700 dark:text-danger-300 text-sm">
-                {error}
+                {apiError}
               </div>
             )}
             <Input
               label="Name"
               type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
               placeholder="Your name"
-              required
               autoComplete="name"
+              error={errors.name?.message}
+              {...register("name")}
             />
             <Input
               label="Email"
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              required
               autoComplete="email"
+              error={errors.email?.message}
+              {...register("email")}
             />
             <Input
               label="Password"
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              required
               autoComplete="new-password"
               hint="At least 8 characters"
+              error={errors.password?.message}
+              {...register("password")}
             />
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Creating account..." : "Create account"}
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? "Creating account..." : "Create account"}
             </Button>
           </form>
 

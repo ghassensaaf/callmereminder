@@ -3,35 +3,51 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { signIn } from "@/lib/auth-client";
 import { Button, Input, Card } from "@/components/ui";
 import { Phone } from "lucide-react";
 
-export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+const loginSchema = z.object({
+  email: z
+    .string()
+    .min(1, "Please enter your email address")
+    .email("Please enter a valid email address"),
+  password: z
+    .string()
+    .min(1, "Please enter your password"),
+});
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+type LoginFormData = z.infer<typeof loginSchema>;
+
+export default function LoginPage() {
+  const [apiError, setApiError] = useState("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    mode: "onBlur",
+  });
+
+  async function onSubmit(data: LoginFormData) {
+    setApiError("");
     try {
       const result = await signIn.email({
-        email,
-        password,
+        email: data.email,
+        password: data.password,
         callbackURL: "/dashboard",
       });
       if (result.error) {
-        setError(result.error.message || "Invalid email or password");
+        setApiError(result.error.message || "Invalid email or password");
         return;
       }
       window.location.href = "/dashboard";
-    } catch (err) {
-      setError("Something went wrong");
-    } finally {
-      setLoading(false);
+    } catch {
+      setApiError("Something went wrong. Please try again.");
     }
   }
 
@@ -59,32 +75,30 @@ export default function LoginPage() {
             Sign in to manage your reminders
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+            {apiError && (
               <div className="p-3 rounded-lg bg-danger-50 dark:bg-danger-950/30 text-danger-700 dark:text-danger-300 text-sm">
-                {error}
+                {apiError}
               </div>
             )}
             <Input
               label="Email"
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              required
               autoComplete="email"
+              error={errors.email?.message}
+              {...register("email")}
             />
             <Input
               label="Password"
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              required
               autoComplete="current-password"
+              error={errors.password?.message}
+              {...register("password")}
             />
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Signing in..." : "Sign in"}
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? "Signing in..." : "Sign in"}
             </Button>
           </form>
 

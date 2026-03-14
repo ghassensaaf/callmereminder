@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "@/lib/auth-client";
 import { settingsApi } from "@/lib/api";
@@ -13,16 +16,39 @@ import { Phone, Settings, ArrowLeft, Trash2, TestTube } from "lucide-react";
 import toast from "react-hot-toast";
 import axios from "axios";
 
+const settingsSchema = z.object({
+  vapiApiKey: z.string().min(1, "Please enter your Vapi API key"),
+  vapiPhoneNumberId: z.string().min(1, "Please enter your Vapi phone number ID"),
+});
+
+type SettingsFormData = z.infer<typeof settingsSchema>;
+
 export default function SettingsPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { data: session, isPending } = useSession();
-  const [vapiApiKey, setVapiApiKey] = useState("");
-  const [vapiPhoneNumberId, setVapiPhoneNumberId] = useState("");
   const [loading, setLoading] = useState(false);
   const [testing, setTesting] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<SettingsFormData>({
+    resolver: zodResolver(settingsSchema),
+    mode: "onBlur",
+    defaultValues: {
+      vapiApiKey: "",
+      vapiPhoneNumberId: "",
+    },
+  });
+
+  const vapiApiKey = watch("vapiApiKey");
+  const vapiPhoneNumberId = watch("vapiPhoneNumberId");
 
   const { data: settings, isLoading: settingsLoading } = useQuery({
     queryKey: ["settings"],
@@ -38,17 +64,17 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (settings?.vapiPhoneNumberId) {
-      setVapiPhoneNumberId(settings.vapiPhoneNumberId);
+      setValue("vapiPhoneNumberId", settings.vapiPhoneNumberId);
     } else {
-      setVapiPhoneNumberId("");
+      setValue("vapiPhoneNumberId", "");
     }
-  }, [settings?.vapiPhoneNumberId]);
+  }, [settings?.vapiPhoneNumberId, setValue]);
 
   async function handleTest() {
-    const apiKey = vapiApiKey.trim();
-    const phoneId = vapiPhoneNumberId.trim();
+    const apiKey = vapiApiKey?.trim() ?? "";
+    const phoneId = vapiPhoneNumberId?.trim() ?? "";
     if (!apiKey || !phoneId) {
-      toast.error("Enter API key and phone number ID to test");
+      toast.error("Please enter both API key and phone number ID to test");
       return;
     }
     setTesting(true);
@@ -69,8 +95,8 @@ export default function SettingsPage() {
     try {
       await settingsApi.delete();
       queryClient.setQueryData(["settings"], { vapiApiKeyDisplay: null, vapiPhoneNumberId: null, hasVapiKeys: false });
-      setVapiApiKey("");
-      setVapiPhoneNumberId("");
+      setValue("vapiApiKey", "");
+      setValue("vapiPhoneNumberId", "");
       toast.success("Vapi configuration removed");
     } catch {
       toast.error("Failed to remove configuration");
@@ -79,17 +105,16 @@ export default function SettingsPage() {
     }
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function onSettingsSubmit(data: SettingsFormData) {
     setLoading(true);
     try {
       const updated = await settingsApi.update({
-        vapiApiKey: vapiApiKey.trim() || undefined,
-        vapiPhoneNumberId: vapiPhoneNumberId.trim() || undefined,
+        vapiApiKey: data.vapiApiKey.trim(),
+        vapiPhoneNumberId: data.vapiPhoneNumberId.trim(),
       });
       queryClient.setQueryData(["settings"], updated);
       toast.success("Settings saved");
-      setVapiApiKey("");
+      setValue("vapiApiKey", "");
     } catch (err) {
       const msg = axios.isAxiosError(err) ? err.response?.data?.detail : "Failed to save";
       toast.error(msg || "Failed to save settings");
@@ -197,21 +222,21 @@ export default function SettingsPage() {
                 </div>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit(onSettingsSubmit)} className="space-y-4" noValidate>
                 <Input
                   label="Vapi API Key"
                   type="password"
-                  value={vapiApiKey}
-                  onChange={(e) => setVapiApiKey(e.target.value)}
                   placeholder={hasConfig ? "Enter new API key to update" : "Enter your API key"}
                   hint="Your key is stored securely and never shown"
+                  error={errors.vapiApiKey?.message}
+                  {...register("vapiApiKey")}
                 />
                 <Input
                   label="Vapi Phone Number ID"
                   type="text"
-                  value={vapiPhoneNumberId}
-                  onChange={(e) => setVapiPhoneNumberId(e.target.value)}
                   placeholder="e.g. 123e4567-e89b-12d3-a456-426614174000"
+                  error={errors.vapiPhoneNumberId?.message}
+                  {...register("vapiPhoneNumberId")}
                 />
                 <div className="flex flex-wrap gap-2">
                   <Button type="submit" disabled={loading}>
@@ -220,7 +245,7 @@ export default function SettingsPage() {
                   <Button
                     type="button"
                     variant="outline"
-                    disabled={testing || !vapiApiKey.trim() || !vapiPhoneNumberId.trim()}
+                    disabled={testing || !vapiApiKey?.trim() || !vapiPhoneNumberId?.trim()}
                     onClick={handleTest}
                   >
                     <TestTube className="h-4 w-4 mr-1.5" />

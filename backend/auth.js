@@ -17,7 +17,17 @@ export const auth = betterAuth({
     enabled: true,
   },
   plugins: [
-    ...(process.env.BETTER_AUTH_API_KEY ? [dash({ apiKey: process.env.BETTER_AUTH_API_KEY })] : []),
+    ...(process.env.BETTER_AUTH_API_KEY
+      ? [
+          dash({
+            apiKey: process.env.BETTER_AUTH_API_KEY,
+            activityTracking: {
+              enabled: true,
+              updateInterval: 60000, // 1 minute - sends activity to dashboard
+            },
+          }),
+        ]
+      : []),
   ],
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:8000",

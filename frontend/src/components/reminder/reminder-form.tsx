@@ -21,14 +21,17 @@ import {
 import { Reminder, ReminderCreate, ReminderUpdate } from "@/types/reminder";
 
 const reminderSchema = z.object({
-  title: z.string().min(1, "Title is required").max(255, "Title is too long"),
+  title: z
+    .string()
+    .min(1, "Please enter a reminder title")
+    .max(255, "Title must be 255 characters or less"),
   message: z
     .string()
-    .min(1, "Message is required")
-    .max(1000, "Message is too long"),
+    .min(1, "Please enter the message you want to hear")
+    .max(1000, "Message must be 1000 characters or less"),
   phone_number: z
     .string()
-    .min(1, "Phone number is required")
+    .min(1, "Please enter your phone number")
     .refine(
       (val) => {
         try {
@@ -39,8 +42,8 @@ const reminderSchema = z.object({
       },
       "Please enter a valid phone number"
     ),
-  scheduled_at: z.string().min(1, "Date and time is required"),
-  timezone: z.string().min(1, "Timezone is required"),
+  scheduled_at: z.string().min(1, "Please select a date and time"),
+  timezone: z.string().min(1, "Please select your timezone"),
 });
 
 type ReminderFormData = z.infer<typeof reminderSchema>;
@@ -150,7 +153,7 @@ export function ReminderForm({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
         {/* Title */}
         <Input
           label="Reminder Title"
