@@ -16,23 +16,23 @@ export default function LandingPage() {
       <header className="fixed top-0 left-0 right-0 z-50">
         <div className="absolute inset-0 bg-white/80 dark:bg-surface-950/80 backdrop-blur-xl border-b border-surface-200/50 dark:border-surface-800/50" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center gap-3 group">
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 shadow-lg shadow-primary-500/25">
-                <Phone className="h-5 w-5 text-white" />
+          <div className="flex items-center justify-between h-14 sm:h-16 gap-4">
+            <Link href="/" className="flex items-center gap-2 sm:gap-3 group min-w-0 flex-shrink-0">
+              <div className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 shadow-lg shadow-primary-500/25 flex-shrink-0">
+                <Phone className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
               </div>
-              <span className="font-display font-bold text-lg text-surface-900 dark:text-surface-50">
-                CallMe Reminder
+              <span className="font-display font-bold text-base sm:text-lg text-surface-900 dark:text-surface-50 truncate">
+                CallMe<span className="hidden sm:inline"> Reminder</span>
               </span>
             </Link>
-            <nav className="flex items-center gap-4">
+            <nav className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
               <Link href="/login">
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" className="text-sm">
                   Sign in
                 </Button>
               </Link>
               <Link href="/signup">
-                <Button size="sm">Get started</Button>
+                <Button size="sm" className="text-sm">Get started</Button>
               </Link>
             </nav>
           </div>
