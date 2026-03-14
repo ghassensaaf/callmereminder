@@ -9,7 +9,7 @@ import { ArrowLeft, Key, Phone, CheckCircle } from "lucide-react";
 export default function VapiGuidePage() {
   return (
     <div className="min-h-screen">
-      <Header onCreateClick={() => window.location.href = "/"} />
+      <Header />
 
       <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Link

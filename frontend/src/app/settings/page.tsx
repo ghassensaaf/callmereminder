@@ -135,7 +135,7 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen">
-      <Header onCreateClick={() => router.push("/dashboard")} />
+      <Header />
 
       <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Link

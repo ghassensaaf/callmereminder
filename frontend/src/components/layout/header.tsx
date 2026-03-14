@@ -3,17 +3,13 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, Settings, LogOut, Menu, X } from "lucide-react";
+import { Settings, LogOut, Menu, X } from "lucide-react";
 
 import { Button, ThemeToggle } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { useSession, signOut } from "@/lib/auth-client";
 
-interface HeaderProps {
-  onCreateClick?: () => void;
-}
-
-export function Header({ onCreateClick }: HeaderProps) {
+export function Header() {
   const { data: session, isPending } = useSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -30,11 +26,6 @@ export function Header({ onCreateClick }: HeaderProps) {
   }, [mobileMenuOpen]);
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
-
-  const handleCreateClick = () => {
-    closeMobileMenu();
-    onCreateClick?.();
-  };
 
   const handleSignOut = () => {
     signOut({
@@ -100,11 +91,6 @@ export function Header({ onCreateClick }: HeaderProps) {
                       >
                         Sign out
                       </Button>
-                      {onCreateClick && (
-                        <Button onClick={onCreateClick} leftIcon={<Plus className="h-4 w-4" />}>
-                          New Reminder
-                        </Button>
-                      )}
                     </>
                   ) : (
                     <>
@@ -158,15 +144,6 @@ export function Header({ onCreateClick }: HeaderProps) {
                 <Settings className="h-4 w-4" />
                 Settings
               </Link>
-              {onCreateClick && (
-                <button
-                  onClick={handleCreateClick}
-                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-left text-surface-700 dark:text-surface-200 hover:bg-surface-100 dark:hover:bg-surface-800 font-medium w-full"
-                >
-                  <Plus className="h-4 w-4" />
-                  New Reminder
-                </button>
-              )}
               <button
                 onClick={handleSignOut}
                 className="flex items-center gap-3 px-4 py-3 rounded-xl text-left text-danger-600 dark:text-danger-400 hover:bg-danger-50 dark:hover:bg-danger-950/30 font-medium w-full"
