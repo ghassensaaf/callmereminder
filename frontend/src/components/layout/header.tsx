@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Plus, Phone, Settings, LogOut, Menu, X } from "lucide-react";
+import Image from "next/image";
+import { Plus, Settings, LogOut, Menu, X } from "lucide-react";
 
 import { Button, ThemeToggle } from "@/components/ui";
 import { cn } from "@/lib/utils";
@@ -56,20 +57,17 @@ export function Header({ onCreateClick }: HeaderProps) {
             className="flex items-center gap-2 sm:gap-3 group min-w-0"
             onClick={closeMobileMenu}
           >
-            <div className="relative flex-shrink-0">
-              <div className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 shadow-lg shadow-primary-500/25 group-hover:shadow-primary-500/40 transition-shadow">
-                <Phone className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-              </div>
-              <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5 sm:h-3 sm:w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 sm:h-3 sm:w-3 bg-primary-500" />
-              </span>
-            </div>
-            <div className="min-w-0">
-              <span className="font-display font-bold text-base sm:text-lg text-surface-900 dark:text-surface-50 truncate">
-                Dialcues
-              </span>
-            </div>
+            <Image
+              src="/logo.png"
+              alt="Dialcues"
+              width={40}
+              height={40}
+              className="h-9 w-9 sm:h-10 sm:w-10 object-contain flex-shrink-0"
+              priority
+            />
+            <span className="font-display font-bold text-base sm:text-lg text-surface-900 dark:text-surface-50 truncate">
+              Dialcues
+            </span>
           </Link>
 
           {/* Desktop Navigation & Actions */}

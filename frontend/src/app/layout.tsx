@@ -81,6 +81,9 @@ export const metadata: Metadata = {
     canonical: siteUrl,
   },
   category: "productivity",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export const viewport: Viewport = {

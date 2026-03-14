@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Phone, Bell, Zap, Shield, ArrowRight } from "lucide-react";
 
 import { Button } from "@/components/ui";
@@ -18,9 +19,14 @@ export default function LandingPage() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14 sm:h-16 gap-4">
             <Link href="/" className="flex items-center gap-2 sm:gap-3 group min-w-0 flex-shrink-0">
-              <div className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 shadow-lg shadow-primary-500/25 flex-shrink-0">
-                <Phone className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-              </div>
+              <Image
+                src="/logo.png"
+                alt="Dialcues"
+                width={40}
+                height={40}
+                className="h-9 w-9 sm:h-10 sm:w-10 object-contain flex-shrink-0"
+                priority
+              />
               <span className="font-display font-bold text-base sm:text-lg text-surface-900 dark:text-surface-50 truncate">
                 Dialcues
               </span>

@@ -7,8 +7,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { signIn } from "@/lib/auth-client";
+import Image from "next/image";
 import { Button, Input, Card } from "@/components/ui";
-import { Phone } from "lucide-react";
 
 const loginSchema = z.object({
   email: z
@@ -59,9 +59,14 @@ export default function LoginPage() {
         className="w-full max-w-md"
       >
         <Link href="/" className="flex items-center gap-3 justify-center mb-8 group">
-          <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 shadow-lg">
-            <Phone className="h-6 w-6 text-white" />
-          </div>
+          <Image
+            src="/logo.png"
+            alt="Dialcues"
+            width={48}
+            height={48}
+            className="h-12 w-12 object-contain"
+            priority
+          />
           <span className="font-display font-bold text-xl text-surface-900 dark:text-surface-50">
             Dialcues
           </span>
