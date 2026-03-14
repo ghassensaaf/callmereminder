@@ -1,18 +1,18 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { Clock, MessageSquare, Calendar, Repeat, FileText } from "lucide-react";
+import { Clock, MessageSquare, Calendar, Repeat } from "lucide-react";
 import { motion } from "framer-motion";
 import { isValidPhoneNumber } from "libphonenumber-js";
 
 import { Button, Input, Textarea, Select, PhoneInput } from "@/components/ui";
-import { remindersApi, templatesApi } from "@/lib/api";
+import { TemplateSelector } from "@/components/settings";
+import { remindersApi } from "@/lib/api";
 import {
   getTimezones,
   detectTimezone,
@@ -67,21 +67,6 @@ export function ReminderForm({
   const queryClient = useQueryClient();
   const isEditing = !!reminder;
   const phoneInteracted = useRef(false);
-
-  const { data: templates, refetch: refetchTemplates } = useQuery({
-    queryKey: ["templates"],
-    queryFn: () => templatesApi.list(),
-  });
-
-  const saveTemplateMutation = useMutation({
-    mutationFn: (data: { title: string; message: string }) => templatesApi.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["templates"] });
-      refetchTemplates();
-      toast.success("Saved as template");
-    },
-    onError: () => toast.error("Failed to save template"),
-  });
 
   const {
     register,
@@ -191,30 +176,14 @@ export function ReminderForm({
       transition={{ duration: 0.3 }}
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
-        {/* Templates */}
-        {!isEditing && templates?.length && (
-          <div className="space-y-2">
-            <span className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              Use template
-            </span>
-            <div className="flex flex-wrap gap-2">
-              {templates.map((t) => (
-                <Button
-                  key={t.id}
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setValue("title", t.title, { shouldValidate: true });
-                    setValue("message", t.message, { shouldValidate: true });
-                  }}
-                >
-                  {t.title}
-                </Button>
-              ))}
-            </div>
-          </div>
+        {/* Templates - only when creating */}
+        {!isEditing && (
+          <TemplateSelector
+            onSelect={(title, message) => {
+              setValue("title", title, { shouldValidate: true });
+              setValue("message", message, { shouldValidate: true });
+            }}
+          />
         )}
 
         {/* Title */}
@@ -227,33 +196,14 @@ export function ReminderForm({
         />
 
         {/* Message */}
-        <div className="space-y-2">
-          <Textarea
-            label="Reminder Message"
-            placeholder="The message that will be spoken when you receive the call..."
-            hint="This is what you'll hear when the reminder calls you"
-            error={errors.message?.message}
-            rows={4}
-            {...register("message")}
-          />
-          {watch("title")?.trim() && watch("message")?.trim() && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() =>
-                saveTemplateMutation.mutate({
-                  title: watch("title")!.trim(),
-                  message: watch("message")!.trim(),
-                })
-              }
-              isLoading={saveTemplateMutation.isPending}
-              leftIcon={<FileText className="h-3.5 w-3.5" />}
-            >
-              Save as template
-            </Button>
-          )}
-        </div>
+        <Textarea
+          label="Reminder Message"
+          placeholder="The message that will be spoken when you receive the call..."
+          hint="This is what you'll hear when the reminder calls you. Create templates in Settings for quick reuse."
+          error={errors.message?.message}
+          rows={4}
+          {...register("message")}
+        />
 
         {/* Phone Number */}
         <PhoneInput
