@@ -21,7 +21,7 @@ function formatExecution(e) {
 
 router.post("/", requireAuth, async (req, res) => {
   try {
-    const { title, message, phone_number, scheduled_at, timezone, recurrence_type, recurrence_config } = req.body;
+    const { title, message, phone_number, scheduled_at, timezone, recurrence_type, recurrence_config, recurrence_end_at } = req.body;
     if (!title?.trim() || !message?.trim() || !phone_number || !scheduled_at || !timezone) {
       return res.status(400).json({ detail: "Missing required fields" });
     }
