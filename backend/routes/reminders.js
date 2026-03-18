@@ -21,7 +21,8 @@ function formatExecution(e) {
 
 router.post("/", requireAuth, async (req, res) => {
   try {
-    const { title, message, phone_number, scheduled_at, timezone, recurrence_type, recurrence_config, recurrence_end_at } = req.body;
+    const { title, message, phone_number, scheduled_at, timezone, recurrence_type, recurrence_config } = req.body;
+    const recurrence_end_at = req.body.recurrence_end_at;
     if (!title?.trim() || !message?.trim() || !phone_number || !scheduled_at || !timezone) {
       return res.status(400).json({ detail: "Missing required fields" });
     }
@@ -199,7 +200,8 @@ router.put("/:id", requireAuth, async (req, res) => {
       return res.status(400).json({ detail: "Can only update scheduled, paused, or failed reminders" });
     }
 
-    const { title, message, phone_number, scheduled_at, timezone, recurrence_type, recurrence_config, recurrence_end_at, status } = req.body;
+    const { title, message, phone_number, scheduled_at, timezone, recurrence_type, recurrence_config, status } = req.body;
+    const recurrence_end_at = req.body.recurrence_end_at;
     const data = {};
     if (title !== undefined) data.title = title.trim();
     if (message !== undefined) data.message = message.trim();
