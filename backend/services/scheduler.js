@@ -1,5 +1,6 @@
 import prisma from "../lib/prisma.js";
 import { computeNextScheduledAt } from "../lib/utils.js";
+import { generateVoiceActionToken } from "../lib/voice-action-token.js";
 import { makeCall } from "./vapi.js";
 
 let intervalId = null;
@@ -33,12 +34,14 @@ async function processDueReminders() {
       const apiKey = settings?.vapiApiKey ?? null;
       const phoneNumberId = settings?.vapiPhoneNumberId ?? null;
 
+      const voiceActionToken = generateVoiceActionToken(reminder.id);
       const { success, callId, errorMessage } = await makeCall(
         reminder.phone_number,
         reminder.message,
         reminder.title,
         apiKey,
-        phoneNumberId
+        phoneNumberId,
+        { reminderId: reminder.id, voiceActionToken }
       );
 
       const execStatus = success ? "completed" : "failed";

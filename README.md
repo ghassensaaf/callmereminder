@@ -65,6 +65,8 @@ cd frontend && npm run dev
 | `CORS_ORIGINS` | No | Comma-separated frontend URLs. Default includes localhost |
 | `BETTER_AUTH_API_KEY` | No | For [Better Auth Dashboard](https://dash.better-auth.com) (activity tracking) |
 | `PORT` | No | Default: 8000 |
+| `API_PUBLIC_URL` | No | Backend URL reachable by Vapi (e.g. `https://api.yourapp.com`). Required for voice actions (snooze/dismiss by speaking during call). For local dev, use [ngrok](https://ngrok.com). |
+| `VOICE_ACTION_SECRET` | No | Secret for signing voice action tokens. Generate: `openssl rand -base64 32`. Required when using voice actions. |
 
 **Note:** Vapi API keys are stored per-user in the database. Users add them in Settings after signup. No backend env vars for Vapi.
 
@@ -133,6 +135,15 @@ callMeReminder/
 - When a reminder is due, backend fetches the user's Vapi credentials and initiates the call
 - Voice message: *"Hello! This is Dialcues. Your reminder: [title]. [message]. Goodbye!"*
 
+### Voice Actions (optional)
+
+When `API_PUBLIC_URL` and `VOICE_ACTION_SECRET` are set, users can speak during the call to:
+- **Snooze** — e.g. "snooze for 10 minutes", "remind me in an hour", "tomorrow"
+- **Dismiss** — e.g. "dismiss", "I'm done"
+- **Repeat** — "repeat" (assistant repeats the message)
+
+The assistant asks after delivering the reminder. For local dev, expose your backend with [ngrok](https://ngrok.com) and set `API_PUBLIC_URL` to the ngrok URL.
+
 ---
 
 ## API Reference
@@ -141,6 +152,7 @@ callMeReminder/
 |--------|----------|------|-------------|
 | GET | `/api/reminders` | Yes | List reminders. Query: `status`, `search`, `page`, `page_size` |
 | POST | `/api/reminders` | Yes | Create reminder |
+| POST | `/api/reminders/voice-action` | No | Voice actions (snooze/dismiss during call) — uses signed token |
 | GET | `/api/reminders/:id` | Yes | Get reminder |
 | PUT | `/api/reminders/:id` | Yes | Update reminder |
 | DELETE | `/api/reminders/:id` | Yes | Delete reminder |

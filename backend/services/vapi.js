@@ -33,16 +33,86 @@ export async function validateVapiConfig(apiKey, phoneNumberId) {
   }
 }
 
-export async function makeCall(toPhoneNumber, message, reminderTitle, apiKey, phoneNumberId) {
+export async function makeCall(toPhoneNumber, message, reminderTitle, apiKey, phoneNumberId, options = {}) {
   if (!apiKey || !phoneNumberId) {
     console.error("Vapi API key or phone number ID not configured for user");
     return { success: false, callId: null, errorMessage: "Vapi not configured. Add your keys in Settings." };
   }
 
-  const payload = {
-    phoneNumberId,
-    customer: { number: toPhoneNumber },
-    assistant: {
+  const { reminderId, voiceActionToken } = options;
+  const apiBaseUrl = process.env.API_PUBLIC_URL?.replace(/\/$/, "");
+  const useVoiceActions = !!(apiBaseUrl && voiceActionToken);
+
+  const firstMessage = `Hello! This is Dialcues. Your reminder: ${reminderTitle}. ${message}. Goodbye!`;
+
+  let assistant;
+  if (useVoiceActions) {
+    assistant = {
+      name: "Reminder Assistant",
+      model: {
+        provider: "openai",
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: `You are a friendly reminder delivery assistant for Dialcues. Deliver the reminder, then ask if the user wants to do anything.
+
+REMINDER TO DELIVER:
+"Hello! This is Dialcues. Your reminder: ${reminderTitle}. ${message}. Goodbye!"
+
+After delivering the reminder, say: "Would you like me to snooze this for 10 minutes, an hour, or tomorrow? Or say dismiss if you're done."
+
+VOICE ACTIONS:
+- When the user says to snooze (e.g. "snooze for 10 minutes", "snooze for an hour", "remind me tomorrow"), call the voiceAction function with action "snooze" and duration: "10min", "1hour", or "tomorrow". Use the token: ${voiceActionToken}
+- When the user says dismiss/done (e.g. "dismiss", "I'm done", "I got it"), call voiceAction with action "dismiss". Use the token: ${voiceActionToken}
+- When the user says repeat, say the reminder again: "${reminderTitle}. ${message}"
+- When the user says nothing or wants to end, call endCall
+
+Always use the exact token above when calling voiceAction.`,
+          },
+        ],
+        tools: [
+          { type: "endCall" },
+          {
+            type: "apiRequest",
+            function: { name: "voice_action" },
+            name: "voiceAction",
+            url: `${apiBaseUrl}/api/reminders/voice-action`,
+            method: "POST",
+            body: {
+              type: "object",
+              properties: {
+                token: {
+                  type: "string",
+                  description: `The voice action token. Use: ${voiceActionToken}`,
+                },
+                action: {
+                  type: "string",
+                  description: "Action to perform: snooze or dismiss",
+                  enum: ["snooze", "dismiss"],
+                },
+                duration: {
+                  type: "string",
+                  description: "For snooze: 10min, 1hour, or tomorrow",
+                },
+              },
+              required: ["token", "action"],
+            },
+          },
+        ],
+      },
+      voice: {
+        provider: "11labs",
+        voiceId: "21m00Tcm4TlvDq8ikWAM",
+      },
+      firstMessage,
+      endCallFunctionEnabled: true,
+      maxDurationSeconds: 120,
+      silenceTimeoutSeconds: 15,
+      backgroundSound: "off",
+    };
+  } else {
+    assistant = {
       name: "Reminder Assistant",
       model: {
         provider: "openai",
@@ -69,12 +139,18 @@ After saying this, immediately end the call using the endCall function.`,
         provider: "11labs",
         voiceId: "21m00Tcm4TlvDq8ikWAM",
       },
-      firstMessage: `Hello! This is Dialcues. Your reminder: ${message}. Goodbye!`,
+      firstMessage,
       endCallFunctionEnabled: true,
       maxDurationSeconds: 60,
       silenceTimeoutSeconds: 10,
       backgroundSound: "off",
-    },
+    };
+  }
+
+  const payload = {
+    phoneNumberId,
+    customer: { number: toPhoneNumber },
+    assistant,
   };
 
   try {

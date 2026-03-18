@@ -1,7 +1,10 @@
 import { Router } from "express";
+import { addMinutes, addHours, addDays, setHours, setMinutes, startOfDay } from "date-fns";
+import { toZonedTime, formatInTimeZone } from "date-fns-tz";
 import prisma from "../lib/prisma.js";
 import { requireAuth } from "../middleware/auth.js";
 import { E164_REGEX, STATUSES, toUtc, formatReminder } from "../lib/utils.js";
+import { verifyVoiceActionToken } from "../lib/voice-action-token.js";
 
 const router = Router();
 
@@ -61,6 +64,73 @@ router.post("/", requireAuth, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ detail: err.message });
+  }
+});
+
+/**
+ * Voice action endpoint - called by Vapi when user speaks during a reminder call.
+ * No auth - uses signed token. Actions: snooze, dismiss.
+ */
+router.post("/voice-action", async (req, res) => {
+  try {
+    const { token, action, duration } = req.body;
+    const decoded = verifyVoiceActionToken(token);
+    if (!decoded) {
+      return res.status(401).json({ success: false, message: "Invalid or expired token" });
+    }
+
+    const reminder = await prisma.reminder.findFirst({
+      where: { id: decoded.reminderId },
+    });
+    if (!reminder) {
+      return res.status(404).json({ success: false, message: "Reminder not found" });
+    }
+    // Allow in_progress (during call) and completed (scheduler may have marked it before user spoke)
+    if (!["scheduled", "in_progress", "completed"].includes(reminder.status)) {
+      return res.status(400).json({ success: false, message: "Reminder cannot be modified" });
+    }
+
+    const tz = reminder.timezone || "UTC";
+    const now = new Date();
+    const zonedNow = toZonedTime(now, tz);
+
+    if (action === "snooze") {
+      const dur = (duration || "10min").toLowerCase();
+      let scheduledUtc;
+      if (dur === "10min" || dur === "10 minutes") {
+        scheduledUtc = addMinutes(now, 10);
+      } else if (dur === "1hour" || dur === "1 hour" || dur === "one hour") {
+        scheduledUtc = addHours(now, 1);
+      } else if (dur === "tomorrow") {
+        const tomorrow9 = setMinutes(setHours(addDays(startOfDay(zonedNow), 1), 9), 0);
+        const dateStr = formatInTimeZone(tomorrow9, tz, "yyyy-MM-dd'T'HH:mm:ss");
+        scheduledUtc = toUtc(dateStr, tz);
+      } else {
+        scheduledUtc = addMinutes(now, 10); // default
+      }
+
+      await prisma.reminder.update({
+        where: { id: reminder.id },
+        data: { scheduled_at: scheduledUtc, status: "scheduled", error_message: null },
+      });
+
+      const friendly =
+        dur.includes("10") ? "10 minutes" : dur.includes("hour") ? "1 hour" : dur.includes("tomorrow") ? "tomorrow 9:00" : "10 minutes";
+      return res.json({ success: true, message: `Snoozed until ${friendly}` });
+    }
+
+    if (action === "dismiss") {
+      await prisma.reminder.update({
+        where: { id: reminder.id },
+        data: { status: "completed", error_message: null },
+      });
+      return res.json({ success: true, message: "Reminder dismissed" });
+    }
+
+    return res.status(400).json({ success: false, message: "Unknown action. Use snooze or dismiss." });
+  } catch (err) {
+    console.error("Voice action error:", err);
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
