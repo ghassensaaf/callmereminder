@@ -2,6 +2,61 @@ import axios from "axios";
 
 const VAPI_BASE_URL = "https://api.vapi.ai";
 
+/** Server URL for Vapi webhooks (end-of-call-report). Requires API_PUBLIC_URL. */
+function assistantServerConfig() {
+  const apiBaseUrl = process.env.API_PUBLIC_URL?.replace(/\/$/, "");
+  if (!apiBaseUrl) return {};
+  const headers = {};
+  const secret = process.env.VAPI_WEBHOOK_SECRET?.trim();
+  if (secret) headers["X-Dialcues-Webhook"] = secret;
+  return {
+    server: {
+      url: `${apiBaseUrl}/api/vapi/server`,
+      ...(Object.keys(headers).length ? { headers } : {}),
+    },
+  };
+}
+
+/**
+ * Load call artifact from Vapi (GET /call/:id) for manual sync / fallback.
+ * @returns {Promise<object|null>}
+ */
+export async function fetchCallLog(apiKey, callId) {
+  if (!apiKey?.trim() || !callId?.trim()) return null;
+  try {
+    const response = await axios.get(`${VAPI_BASE_URL}/call/${encodeURIComponent(callId.trim())}`, {
+      headers: {
+        Authorization: `Bearer ${apiKey.trim()}`,
+      },
+      timeout: 20000,
+    });
+    const call = response.data || {};
+    const artifact = call.artifact || {};
+    const recording = artifact.recording;
+    let recordingUrl = artifact.recordingUrl ?? null;
+    if (!recordingUrl && recording != null) {
+      recordingUrl = typeof recording === "string" ? recording : recording.url ?? null;
+    }
+
+    return {
+      endedReason: call.endedReason ?? null,
+      transcript: artifact.transcript ?? call.transcript ?? null,
+      messages: Array.isArray(artifact.messages) ? JSON.parse(JSON.stringify(artifact.messages)) : null,
+      summary: call.summary ?? null,
+      recordingUrl,
+      stereoRecordingUrl: artifact.stereoRecordingUrl ?? null,
+      durationSeconds: call.durationSeconds ?? call.duration ?? null,
+      cost: call.cost ?? null,
+      enrichedAt: new Date().toISOString(),
+    };
+  } catch (err) {
+    const status = err.response?.status;
+    const msg = err.response?.data?.message || err.message;
+    console.error("fetchCallLog error:", status, msg);
+    return null;
+  }
+}
+
 /**
  * Validate Vapi API key and phone number ID by fetching the phone number.
  * Returns { valid: true } or { valid: false, error: string }.
@@ -110,6 +165,7 @@ Always use the exact token above when calling voiceAction.`,
       maxDurationSeconds: 120,
       silenceTimeoutSeconds: 15,
       backgroundSound: "off",
+      ...assistantServerConfig(),
     };
   } else {
     assistant = {
@@ -144,6 +200,7 @@ After saying this, immediately end the call using the endCall function.`,
       maxDurationSeconds: 60,
       silenceTimeoutSeconds: 10,
       backgroundSound: "off",
+      ...assistantServerConfig(),
     };
   }
 

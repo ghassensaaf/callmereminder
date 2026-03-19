@@ -101,6 +101,8 @@ model ReminderExecution {
   status        String    @db.VarChar(20) // completed | failed
   call_id       String?   @db.VarChar(255)
   error_message String?   @db.VarChar(500)
+  /// Transcript, messages, recording URLs, etc. (from Vapi end-of-call-report or sync)
+  call_details  Json?
   executed_at   DateTime  @default(now())
   reminder      Reminder  @relation(fields: [reminderId], references: [id], onDelete: Cascade)
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)

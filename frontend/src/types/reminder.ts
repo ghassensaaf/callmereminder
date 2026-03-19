@@ -19,6 +19,25 @@ export interface Reminder {
   updated_at?: string;
 }
 
+/** Populated from Vapi end-of-call-report or manual sync (GET /call/:id). */
+export interface CallLogDetails {
+  endedReason?: string | null;
+  transcript?: string | null;
+  messages?: Array<{
+    role?: string;
+    message?: string;
+    content?: string;
+    time?: number;
+    secondsFromStart?: number;
+  }> | null;
+  summary?: string | null;
+  recordingUrl?: string | null;
+  stereoRecordingUrl?: string | null;
+  durationSeconds?: number | null;
+  cost?: number | null;
+  enrichedAt?: string | null;
+}
+
 export interface ReminderExecution {
   id: number;
   reminder_id: number;
@@ -28,6 +47,7 @@ export interface ReminderExecution {
   status: "completed" | "failed";
   call_id?: string | null;
   error_message?: string | null;
+  call_details?: CallLogDetails | null;
   executed_at: string;
 }
 

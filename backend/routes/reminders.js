@@ -5,6 +5,7 @@ import prisma from "../lib/prisma.js";
 import { requireAuth } from "../middleware/auth.js";
 import { E164_REGEX, STATUSES, toUtc, formatReminder } from "../lib/utils.js";
 import { verifyVoiceActionToken } from "../lib/voice-action-token.js";
+import { fetchCallLog } from "../services/vapi.js";
 
 const router = Router();
 
@@ -18,6 +19,7 @@ function formatExecution(e) {
     status: e.status,
     call_id: e.call_id ?? null,
     error_message: e.error_message ?? null,
+    call_details: e.call_details ?? null,
     executed_at: e.executed_at?.toISOString?.()?.replace(/\.\d{3}Z$/, "Z") ?? e.executed_at,
   };
 }
@@ -174,6 +176,43 @@ router.get("/executions", requireAuth, async (req, res) => {
       page_size: pageSize,
       total_pages: Math.ceil(total / pageSize),
     });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ detail: err.message });
+  }
+});
+
+/** Pull transcript / recording metadata from Vapi for an execution (manual refresh). */
+router.post("/executions/:execId/sync-call-log", requireAuth, async (req, res) => {
+  try {
+    const execId = parseInt(req.params.execId, 10);
+    if (isNaN(execId)) return res.status(400).json({ detail: "Invalid execution id" });
+
+    const execution = await prisma.reminderExecution.findFirst({
+      where: { id: execId, userId: req.user.id },
+    });
+    if (!execution) return res.status(404).json({ detail: "Execution not found" });
+    if (!execution.call_id?.trim()) {
+      return res.status(400).json({ detail: "This run has no Vapi call id (e.g. failed before dial)." });
+    }
+
+    const settings = await prisma.userSettings.findUnique({ where: { userId: req.user.id } });
+    if (!settings?.vapiApiKey?.trim()) {
+      return res.status(400).json({ detail: "Add your Vapi API key in Settings to load call details." });
+    }
+
+    const details = await fetchCallLog(settings.vapiApiKey, execution.call_id);
+    if (!details) {
+      return res.status(502).json({ detail: "Could not load this call from Vapi. It may still be in progress or expired." });
+    }
+
+    const updated = await prisma.reminderExecution.update({
+      where: { id: execId },
+      data: { call_details: details },
+      include: { reminder: { select: { title: true, message: true } } },
+    });
+
+    res.json(formatExecution(updated));
   } catch (err) {
     console.error(err);
     res.status(500).json({ detail: err.message });

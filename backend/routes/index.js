@@ -3,9 +3,11 @@ import remindersRouter from "./reminders.js";
 import templatesRouter from "./templates.js";
 import statsRouter from "./stats.js";
 import settingsRouter from "./settings.js";
+import vapiServerRouter from "./vapi-server.js";
 
 const router = Router();
 
+router.use("/vapi", vapiServerRouter);
 router.use("/reminders", remindersRouter);
 router.use("/templates", templatesRouter);
 router.use("/stats", statsRouter);

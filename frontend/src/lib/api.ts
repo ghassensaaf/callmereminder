@@ -6,6 +6,7 @@ import {
   ReminderUpdate,
   ReminderStats,
   ReminderExecutionListResponse,
+  ReminderExecution,
 } from "@/types/reminder";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -42,6 +43,12 @@ export const remindersApi = {
     date_to?: string;
   }): Promise<ReminderExecutionListResponse> => {
     const response = await api.get("/api/reminders/executions", { params });
+    return response.data;
+  },
+
+  /** Fetch transcript / recording info from Vapi for a completed call */
+  syncExecutionCallLog: async (executionId: number): Promise<ReminderExecution> => {
+    const response = await api.post(`/api/reminders/executions/${executionId}/sync-call-log`);
     return response.data;
   },
 

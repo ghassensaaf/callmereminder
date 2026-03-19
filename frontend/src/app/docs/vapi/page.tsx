@@ -58,6 +58,23 @@ export default function VapiGuidePage() {
               </ol>
             </div>
 
+            <div>
+              <h2 className="font-semibold text-surface-900 dark:text-surface-50 mb-2">
+                Call history & transcripts
+              </h2>
+              <p className="text-surface-600 dark:text-surface-300 text-sm leading-relaxed">
+                To save transcripts and recording links automatically, deploy the API with a public base URL and set the{" "}
+                <code className="bg-surface-100 dark:bg-surface-800 px-1 rounded text-xs">API_PUBLIC_URL</code>{" "}
+                environment variable (same value you use for voice actions). Vapi will POST an end-of-call report to{" "}
+                <code className="bg-surface-100 dark:bg-surface-800 px-1 rounded text-xs">/api/vapi/server</code>. You
+                can always use <strong>Load from Vapi</strong> on a history card to pull details manually. Optionally set{" "}
+                <code className="bg-surface-100 dark:bg-surface-800 px-1 rounded text-xs">VAPI_WEBHOOK_SECRET</code> on
+                the server and the same value is sent in the{" "}
+                <code className="bg-surface-100 dark:bg-surface-800 px-1 rounded text-xs">X-Dialcues-Webhook</code>{" "}
+                header for verification.
+              </p>
+            </div>
+
             <div className="p-4 rounded-lg bg-success-50 dark:bg-success-950/30 border border-success-200 dark:border-success-800">
               <div className="flex gap-3">
                 <CheckCircle className="h-5 w-5 text-success-600 dark:text-success-400 flex-shrink-0 mt-0.5" />
