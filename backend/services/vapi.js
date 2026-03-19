@@ -43,7 +43,7 @@ export async function makeCall(toPhoneNumber, message, reminderTitle, apiKey, ph
   const apiBaseUrl = process.env.API_PUBLIC_URL?.replace(/\/$/, "");
   const useVoiceActions = !!(apiBaseUrl && voiceActionToken);
 
-  const firstMessage = `Hello! This is Dialcues. Your reminder: ${reminderTitle}. ${message}. Goodbye!`;
+  const firstMessage = `Hello! This is Dialcues. Your reminder: ${reminderTitle}. ${message}. if you want to snooze this for 10 minutes, an hour, or tomorrow, say snooze for 10 minutes, an hour, or tomorrow. If you want to dismiss, say dismiss. If you want to repeat, say repeat. If you want to end, say end.`;
 
   let assistant;
   if (useVoiceActions) {
@@ -58,7 +58,7 @@ export async function makeCall(toPhoneNumber, message, reminderTitle, apiKey, ph
             content: `You are a friendly reminder delivery assistant for Dialcues. Deliver the reminder, then ask if the user wants to do anything.
 
 REMINDER TO DELIVER:
-"Hello! This is Dialcues. Your reminder: ${reminderTitle}. ${message}. Goodbye!"
+"Hello! This is Dialcues. Your reminder: ${reminderTitle}. ${message}. if you want to snooze this for 10 minutes, an hour, or tomorrow, say snooze for 10 minutes, an hour, or tomorrow. If you want to dismiss, say dismiss. If you want to repeat, say repeat. If you want to end, say end."
 
 After delivering the reminder, say: "Would you like me to snooze this for 10 minutes, an hour, or tomorrow? Or say dismiss if you're done."
 
@@ -129,7 +129,7 @@ IMPORTANT INSTRUCTIONS:
 4. End the call IMMEDIATELY after delivering the message by calling the endCall function
 
 Deliver this message:
-"Hello! This is Dialcues. Your reminder: ${reminderTitle}. ${message}. Goodbye!"
+"Hello! This is Dialcues. Your reminder: ${reminderTitle}. ${message}. if you want to snooze this for 10 minutes, an hour, or tomorrow, say snooze for 10 minutes, an hour, or tomorrow. If you want to dismiss, say dismiss. If you want to repeat, say repeat. If you want to end, say end."
 
 After saying this, immediately end the call using the endCall function.`,
           },
