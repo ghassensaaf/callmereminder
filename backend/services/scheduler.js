@@ -2,6 +2,7 @@ import prisma from "../lib/prisma.js";
 import { computeNextScheduledAt } from "../lib/utils.js";
 import { generateVoiceActionToken } from "../lib/voice-action-token.js";
 import { makeCall } from "./vapi.js";
+import { resolveLineForDial } from "../lib/vapi-integration.js";
 
 let intervalId = null;
 
@@ -15,7 +16,7 @@ async function processDueReminders() {
         scheduled_at: { lte: now },
       },
       orderBy: { scheduled_at: "asc" },
-      include: { user: { include: { settings: true } } },
+      include: { user: true },
     });
 
     if (dueReminders.length > 0) {
@@ -30,9 +31,9 @@ async function processDueReminders() {
 
       console.log(`Processing reminder ${reminder.id}: ${reminder.title}`);
 
-      const settings = reminder.user?.settings;
-      const apiKey = settings?.vapiApiKey ?? null;
-      const phoneNumberId = settings?.vapiPhoneNumberId ?? null;
+      const resolved = await resolveLineForDial(reminder.userId, reminder.vapiLineId);
+      const apiKey = resolved?.apiKey ?? null;
+      const phoneNumberId = resolved?.vapiPhoneNumberId ?? null;
 
       const voiceActionToken = generateVoiceActionToken(reminder.id);
       const { success, callId, errorMessage } = await makeCall(

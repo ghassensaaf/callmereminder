@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { Clock, MessageSquare, Calendar, Repeat } from "lucide-react";
 import { motion } from "framer-motion";
@@ -12,7 +12,7 @@ import { isValidPhoneNumber } from "libphonenumber-js";
 
 import { Button, Input, Textarea, Select, PhoneInput } from "@/components/ui";
 import { TemplateSelector } from "@/components/settings";
-import { remindersApi } from "@/lib/api";
+import { remindersApi, vapiConfigsApi } from "@/lib/api";
 import {
   getTimezones,
   detectTimezone,
@@ -49,6 +49,7 @@ const reminderSchema = z.object({
   recurrence_type: z.enum(["daily", "weekly", "custom"]).optional().nullable(),
   recurrence_config: z.string().optional().nullable(),
   recurrence_end_at: z.string().optional().nullable(),
+  vapi_line_id: z.string().optional().nullable(),
 });
 
 type ReminderFormData = z.infer<typeof reminderSchema>;
@@ -68,12 +69,33 @@ export function ReminderForm({
   const isEditing = !!reminder;
   const phoneInteracted = useRef(false);
 
+  const { data: vapiData } = useQuery({
+    queryKey: ["vapi-configs"],
+    queryFn: () => vapiConfigsApi.list(),
+  });
+
+  const lineOptions = useMemo(() => {
+    const opts: { value: string; label: string }[] = [];
+    for (const c of vapiData?.configs ?? []) {
+      for (const n of c.numbers) {
+        opts.push({
+          value: n.id,
+          label: `${c.name} — ${n.nickname}${n.is_default ? " (default line)" : ""}`,
+        });
+      }
+    }
+    return opts;
+  }, [vapiData]);
+
+  const hasOutboundLines = lineOptions.length > 0;
+
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
     setValue,
     watch,
+    getValues,
     trigger,
   } = useForm<ReminderFormData>({
     resolver: zodResolver(reminderSchema),
@@ -91,8 +113,20 @@ export function ReminderForm({
       recurrence_end_at: reminder?.recurrence_end_at
         ? new Date(reminder.recurrence_end_at).toISOString().slice(0, 10)
         : null,
+      vapi_line_id: reminder?.vapi_line_id ?? "",
     },
   });
+
+  const defaultLineFromServer = vapiData?.default_line_id ?? "";
+
+  useEffect(() => {
+    if (reminder || !hasOutboundLines) return;
+    const current = getValues("vapi_line_id");
+    if (current) return;
+    if (defaultLineFromServer) {
+      setValue("vapi_line_id", defaultLineFromServer, { shouldValidate: false });
+    }
+  }, [reminder, hasOutboundLines, defaultLineFromServer, getValues, setValue]);
 
   const createMutation = useMutation({
     mutationFn: (data: ReminderCreate) => remindersApi.create(data),
@@ -157,10 +191,20 @@ export function ReminderForm({
         }
       : { recurrence_type: null, recurrence_config: null, recurrence_end_at: null };
 
+    const outbound = !hasOutboundLines
+      ? {}
+      : {
+          vapi_line_id:
+            data.vapi_line_id?.trim() ||
+            defaultLineFromServer ||
+            lineOptions[0]?.value ||
+            null,
+        };
+
     if (isEditing) {
-      await updateMutation.mutateAsync({ ...base, ...recurrence });
+      await updateMutation.mutateAsync({ ...base, ...recurrence, ...outbound });
     } else {
-      await createMutation.mutateAsync({ ...base, ...recurrence } as ReminderCreate);
+      await createMutation.mutateAsync({ ...base, ...recurrence, ...outbound } as ReminderCreate);
     }
   };
 
@@ -224,6 +268,16 @@ export function ReminderForm({
             trigger("phone_number");
           }}
         />
+
+        {hasOutboundLines && (
+          <Select
+            label="Call from (Vapi)"
+            hint="Uses the API key and caller ID from this line. Default is pre-selected."
+            options={lineOptions}
+            error={errors.vapi_line_id?.message}
+            {...register("vapi_line_id")}
+          />
+        )}
 
         {/* Quick presets */}
         <div className="space-y-2">

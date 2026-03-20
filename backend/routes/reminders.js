@@ -6,6 +6,7 @@ import { requireAuth } from "../middleware/auth.js";
 import { E164_REGEX, STATUSES, toUtc, formatReminder } from "../lib/utils.js";
 import { verifyVoiceActionToken } from "../lib/voice-action-token.js";
 import { fetchCallLog } from "../services/vapi.js";
+import { assertOrResolveVapiLine, getDefaultOutboundLine } from "../lib/vapi-integration.js";
 
 const router = Router();
 
@@ -61,7 +62,16 @@ router.post("/", requireAuth, async (req, res) => {
       data.recurrence_end_at = recurrence_end_at ? toUtc(recurrence_end_at, timezone) : null;
     }
 
-    const reminder = await prisma.reminder.create({ data });
+    const lineResult = await assertOrResolveVapiLine(req.user.id, req.body.vapi_line_id);
+    if (!lineResult.ok) return res.status(400).json({ detail: lineResult.detail });
+    data.vapiLineId = lineResult.vapiLineId;
+
+    const reminder = await prisma.reminder.create({
+      data,
+      include: {
+        vapiLine: { include: { config: { select: { name: true } } } },
+      },
+    });
     res.status(201).json(formatReminder(reminder));
   } catch (err) {
     console.error(err);
@@ -196,12 +206,22 @@ router.post("/executions/:execId/sync-call-log", requireAuth, async (req, res) =
       return res.status(400).json({ detail: "This run has no Vapi call id (e.g. failed before dial)." });
     }
 
-    const settings = await prisma.userSettings.findUnique({ where: { userId: req.user.id } });
-    if (!settings?.vapiApiKey?.trim()) {
-      return res.status(400).json({ detail: "Add your Vapi API key in Settings to load call details." });
+    const execReminder = await prisma.reminder.findFirst({
+      where: { id: execution.reminderId, userId: req.user.id },
+      include: {
+        vapiLine: { include: { config: { select: { vapiApiKey: true } } } },
+      },
+    });
+    let apiKey = execReminder?.vapiLine?.config?.vapiApiKey?.trim() || null;
+    if (!apiKey) {
+      const fallback = await getDefaultOutboundLine(req.user.id);
+      apiKey = fallback?.apiKey ?? null;
+    }
+    if (!apiKey) {
+      return res.status(400).json({ detail: "Add a Vapi integration in Settings to load call details." });
     }
 
-    const details = await fetchCallLog(settings.vapiApiKey, execution.call_id);
+    const details = await fetchCallLog(apiKey, execution.call_id);
     if (!details) {
       return res.status(502).json({ detail: "Could not load this call from Vapi. It may still be in progress or expired." });
     }
@@ -264,6 +284,9 @@ router.get("/", requireAuth, async (req, res) => {
         orderBy,
         skip: (page - 1) * pageSize,
         take: pageSize,
+        include: {
+          vapiLine: { include: { config: { select: { name: true } } } },
+        },
       }),
       prisma.reminder.count({ where }),
     ]);
@@ -287,6 +310,9 @@ router.get("/:id", requireAuth, async (req, res) => {
     if (isNaN(id)) return res.status(400).json({ detail: "Invalid ID" });
     const reminder = await prisma.reminder.findFirst({
       where: { id, userId: req.user.id },
+      include: {
+        vapiLine: { include: { config: { select: { name: true } } } },
+      },
     });
     if (!reminder) return res.status(404).json({ detail: "Reminder not found" });
     res.json(formatReminder(reminder));
@@ -351,9 +377,18 @@ router.put("/:id", requireAuth, async (req, res) => {
       data.status = "scheduled";
     }
 
+    if (req.body.vapi_line_id !== undefined) {
+      const lineResult = await assertOrResolveVapiLine(req.user.id, req.body.vapi_line_id);
+      if (!lineResult.ok) return res.status(400).json({ detail: lineResult.detail });
+      data.vapiLineId = lineResult.vapiLineId;
+    }
+
     const updated = await prisma.reminder.update({
       where: { id },
       data,
+      include: {
+        vapiLine: { include: { config: { select: { name: true } } } },
+      },
     });
     res.json(formatReminder(updated));
   } catch (err) {

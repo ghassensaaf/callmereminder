@@ -23,6 +23,7 @@ model User {
   reminderExecutions  ReminderExecution[]
   reminderTemplates   ReminderTemplate[]
   settings            UserSettings?
+  vapiConfigs         VapiConfig[]
   @@unique([email])
   @@map("user")
 }
@@ -59,7 +60,7 @@ model Account {
   @@map("account")
 }
 
-// User Vapi settings (per-user keys)
+// User settings row (legacy Vapi fields migrated to VapiConfig on first load)
 model UserSettings {
   id                String   @id @default(cuid())
   userId            String   @unique
@@ -69,6 +70,38 @@ model UserSettings {
   updatedAt         DateTime @updatedAt
   user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@map("user_settings")
+}
+
+/// Named Vapi account: one API key, many outbound numbers (each validated).
+model VapiConfig {
+  id         String            @id @default(cuid())
+  userId     String            @map("user_id")
+  name       String            @db.VarChar(100)
+  vapiApiKey String            @map("vapi_api_key") @db.Text
+  isDefault  Boolean           @default(false) @map("is_default")
+  createdAt  DateTime          @default(now()) @map("created_at")
+  updatedAt  DateTime          @updatedAt @map("updated_at")
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  numbers    VapiPhoneNumber[]
+
+  @@index([userId])
+  @@map("vapi_configs")
+}
+
+model VapiPhoneNumber {
+  id                String     @id @default(cuid())
+  vapiConfigId      String     @map("vapi_config_id")
+  vapiPhoneNumberId String     @map("vapi_phone_number_id") @db.VarChar(255)
+  nickname          String     @db.VarChar(100)
+  isDefault         Boolean    @default(false) @map("is_default")
+  createdAt         DateTime   @default(now()) @map("created_at")
+  updatedAt         DateTime   @updatedAt @map("updated_at")
+  config            VapiConfig @relation(fields: [vapiConfigId], references: [id], onDelete: Cascade)
+  reminders         Reminder[]
+
+  @@unique([vapiConfigId, vapiPhoneNumberId])
+  @@index([vapiConfigId])
+  @@map("vapi_phone_numbers")
 }
 
 model Reminder {
@@ -86,10 +119,13 @@ model Reminder {
   recurrence_type     String?             @db.VarChar(20)
   recurrence_config   String?             @db.VarChar(200)
   recurrence_end_at   DateTime?           @db.Timestamptz
+  vapiLineId          String?             @map("vapi_line_id")
   created_at          DateTime            @default(now())
   updated_at        DateTime?           @updatedAt
   user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vapiLine          VapiPhoneNumber?    @relation(fields: [vapiLineId], references: [id], onDelete: SetNull)
   executions        ReminderExecution[]
+  @@index([vapiLineId])
   @@map("reminders")
 }
 

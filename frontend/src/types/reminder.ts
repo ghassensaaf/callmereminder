@@ -10,6 +10,8 @@ export interface Reminder {
   scheduled_at: string;
   timezone: string;
   status: ReminderStatus;
+  vapi_line_id?: string | null;
+  outbound_line_label?: string | null;
   call_id?: string;
   error_message?: string;
   recurrence_type?: RecurrenceType | null;
@@ -73,6 +75,7 @@ export interface ReminderCreate {
   phone_number: string;
   scheduled_at: string;
   timezone: string;
+  vapi_line_id?: string | null;
   recurrence_type?: RecurrenceType | null;
   recurrence_config?: string | Record<string, unknown> | null;
   recurrence_end_at?: string | null;
@@ -84,6 +87,7 @@ export interface ReminderUpdate {
   phone_number?: string;
   scheduled_at?: string;
   timezone?: string;
+  vapi_line_id?: string | null;
   recurrence_type?: RecurrenceType | null;
   recurrence_config?: string | Record<string, unknown> | null;
   recurrence_end_at?: string | null;

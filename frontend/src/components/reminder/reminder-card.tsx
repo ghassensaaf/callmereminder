@@ -179,6 +179,7 @@ export function ReminderCard({ reminder, index = 0 }: ReminderCardProps) {
         phone_number: reminder.phone_number,
         scheduled_at: getPresetDateTime("1hour", reminder.timezone) + ":00",
         timezone: reminder.timezone,
+        vapi_line_id: reminder.vapi_line_id ?? undefined,
         recurrence_type: reminder.recurrence_type ?? undefined,
         recurrence_config: reminder.recurrence_config ?? undefined,
       }),
@@ -280,6 +281,11 @@ export function ReminderCard({ reminder, index = 0 }: ReminderCardProps) {
                     {maskPhoneNumber(reminder.phone_number)}
                   </span>
                 </div>
+                {reminder.outbound_line_label && (
+                  <p className="text-xs text-surface-500 dark:text-surface-400 mt-1">
+                    Call from: {reminder.outbound_line_label}
+                  </p>
+                )}
               </div>
               <Badge
                 variant={status.variant}

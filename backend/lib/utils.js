@@ -62,6 +62,13 @@ export function computeNextScheduledAt(currentScheduled, timezone, recurrenceTyp
 }
 
 export function formatReminder(r) {
+  const line = r.vapiLine;
+  const outbound_line_label =
+    line?.config?.name != null
+      ? `${line.config.name} / ${line.nickname}`
+      : line
+        ? line.nickname
+        : null;
   return {
     id: r.id,
     title: r.title,
@@ -72,6 +79,8 @@ export function formatReminder(r) {
     status: r.status,
     call_id: r.call_id ?? null,
     error_message: r.error_message ?? null,
+    vapi_line_id: r.vapiLineId ?? null,
+    outbound_line_label: outbound_line_label,
     recurrence_type: r.recurrence_type ?? null,
     recurrence_config: r.recurrence_config ?? null,
     recurrence_end_at: r.recurrence_end_at?.toISOString?.()?.replace(/\.\d{3}Z$/, "Z") ?? null,

@@ -8,6 +8,10 @@ import {
   ReminderExecutionListResponse,
   ReminderExecution,
 } from "@/types/reminder";
+import {
+  VapiConfigDto,
+  VapiConfigListResponse,
+} from "@/types/vapi-config";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -104,6 +108,53 @@ export const templatesApi = {
 };
 
 // Settings API (Vapi keys)
+export const vapiConfigsApi = {
+  list: async (): Promise<VapiConfigListResponse> => {
+    const response = await api.get("/api/vapi-configs");
+    return response.data;
+  },
+  create: async (data: {
+    name: string;
+    vapiApiKey: string;
+    is_default?: boolean;
+  }): Promise<VapiConfigDto> => {
+    const response = await api.post("/api/vapi-configs", data);
+    return response.data;
+  },
+  update: async (
+    configId: string,
+    data: { name?: string; vapiApiKey?: string }
+  ): Promise<VapiConfigDto> => {
+    const response = await api.patch(`/api/vapi-configs/${configId}`, data);
+    return response.data;
+  },
+  delete: async (configId: string): Promise<void> => {
+    await api.delete(`/api/vapi-configs/${configId}`);
+  },
+  setDefaultConfig: async (configId: string): Promise<VapiConfigDto> => {
+    const response = await api.post(`/api/vapi-configs/${configId}/set-default`);
+    return response.data;
+  },
+  addNumber: async (
+    configId: string,
+    data: { vapiPhoneNumberId: string; nickname?: string; is_default?: boolean }
+  ): Promise<VapiConfigDto> => {
+    const response = await api.post(`/api/vapi-configs/${configId}/numbers`, data);
+    return response.data;
+  },
+  updateNumber: async (
+    numberId: string,
+    data: { nickname?: string; set_default?: boolean }
+  ): Promise<VapiConfigDto> => {
+    const response = await api.patch(`/api/vapi-configs/numbers/${numberId}`, data);
+    return response.data;
+  },
+  deleteNumber: async (numberId: string): Promise<VapiConfigDto> => {
+    const response = await api.delete(`/api/vapi-configs/numbers/${numberId}`);
+    return response.data;
+  },
+};
+
 export const settingsApi = {
   get: async (): Promise<{ vapiApiKeyDisplay: string | null; vapiPhoneNumberId: string | null; hasVapiKeys: boolean }> => {
     const response = await api.get("/api/settings");
