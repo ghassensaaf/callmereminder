@@ -14,6 +14,17 @@ import { Button, Card, Input, Badge } from "@/components/ui";
 import { organizationApi } from "@/lib/api";
 import { signOut } from "@/lib/auth-client";
 
+function extractOrgId(created: unknown): string | null {
+  if (!created || typeof created !== "object") return null;
+  const o = created as Record<string, unknown>;
+  if (typeof o.id === "string") return o.id;
+  const inner = o.organization ?? o.data;
+  if (inner && typeof inner === "object" && typeof (inner as Record<string, unknown>).id === "string") {
+    return (inner as { id: string }).id;
+  }
+  return null;
+}
+
 function slugify(input: string) {
   return input
     .toLowerCase()
@@ -53,10 +64,19 @@ export default function OrganizationOnboardingPage() {
     }
     setIsCreating(true);
     try {
-      await organizationApi.create({ name: orgName.trim(), slug: effectiveSlug });
-      await queryClient.invalidateQueries({ queryKey: ["settings"] });
+      const created = await organizationApi.create({ name: orgName.trim(), slug: effectiveSlug });
+      let orgId = extractOrgId(created);
+      if (!orgId) {
+        const list = await organizationApi.list();
+        orgId = list[list.length - 1]?.id ?? null;
+      }
+      if (orgId) {
+        await organizationApi.setActive(orgId);
+      }
+      await queryClient.refetchQueries({ queryKey: ["settings"] });
+      await queryClient.refetchQueries({ queryKey: ["organizations"] });
       toast.success("Organization created");
-      router.push("/dashboard");
+      router.replace("/dashboard");
     } catch (err: any) {
       toast.error(
         err?.response?.data?.message || err?.response?.data?.detail || "Failed to create organization"
@@ -68,11 +88,16 @@ export default function OrganizationOnboardingPage() {
 
   async function handleAccept(invitationId: string) {
     try {
+      const invite = pendingInvitations.find((i) => i.id === invitationId);
       await organizationApi.acceptInvitation(invitationId);
-      await queryClient.invalidateQueries({ queryKey: ["settings"] });
+      if (invite?.organizationId) {
+        await organizationApi.setActive(invite.organizationId);
+      }
+      await queryClient.refetchQueries({ queryKey: ["settings"] });
+      await queryClient.refetchQueries({ queryKey: ["organizations"] });
       await queryClient.invalidateQueries({ queryKey: ["my-invitations"] });
       toast.success("Invitation accepted — welcome to the team!");
-      router.push("/dashboard");
+      router.replace("/dashboard");
     } catch {
       toast.error("Failed to accept invitation");
     }

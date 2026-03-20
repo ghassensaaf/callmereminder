@@ -232,6 +232,12 @@ export const settingsApi = {
 };
 
 export const organizationApi = {
+  getInvitation: async (invitationId: string) => {
+    const response = await api.get("/api/auth/organization/get-invitation", {
+      params: { id: invitationId },
+    });
+    return response.data as { id: string; organizationId: string; email: string; role: string; status: string };
+  },
   list: async () => {
     const response = await api.get("/api/auth/organization/list");
     return response.data as Array<{

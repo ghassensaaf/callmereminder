@@ -1,15 +1,16 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { signIn } from "@/lib/auth-client";
-import { useSearchParams } from "next/navigation";
+import { signIn, useSession } from "@/lib/auth-client";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { Button, Input, Card } from "@/components/ui";
+import { absoluteUrl } from "@/lib/site-url";
 
 const loginSchema = z.object({
   email: z
@@ -22,8 +23,10 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 function LoginForm() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/dashboard";
+  const { data: session, isPending: sessionPending } = useSession();
   const [apiError, setApiError] = useState("");
   const {
     register,
@@ -34,22 +37,37 @@ function LoginForm() {
     mode: "onBlur",
   });
 
+  useEffect(() => {
+    if (sessionPending) return;
+    if (session) {
+      router.replace(redirectTo);
+    }
+  }, [session, sessionPending, router, redirectTo]);
+
   async function onSubmit(data: LoginFormData) {
     setApiError("");
     try {
       const result = await signIn.email({
         email: data.email,
         password: data.password,
-        callbackURL: redirectTo,
+        callbackURL: absoluteUrl(redirectTo),
       });
       if (result.error) {
         setApiError(result.error.message || "Invalid email or password");
         return;
       }
-      window.location.href = redirectTo;
+      window.location.href = absoluteUrl(redirectTo);
     } catch {
       setApiError("Something went wrong. Please try again.");
     }
+  }
+
+  if (!sessionPending && session) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="animate-pulse text-surface-500">Redirecting...</div>
+      </div>
+    );
   }
 
   return (

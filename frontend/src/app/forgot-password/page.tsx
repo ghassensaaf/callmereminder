@@ -9,6 +9,7 @@ import { z } from "zod";
 import { authClient } from "@/lib/auth-client";
 import Image from "next/image";
 import { Button, Input, Card } from "@/components/ui";
+import { absoluteUrl } from "@/lib/site-url";
 
 const schema = z.object({
   email: z
@@ -36,7 +37,7 @@ export default function ForgotPasswordPage() {
     try {
       await authClient.requestPasswordReset({
         email: data.email,
-        redirectTo: "/reset-password",
+        redirectTo: absoluteUrl("/reset-password"),
       });
       setSent(true);
     } catch {

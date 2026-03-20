@@ -37,7 +37,9 @@ export const auth = betterAuth({
   emailVerification: {
     sendOnSignUp: true,
     autoSignInAfterVerification: true,
-    sendVerificationEmail: async ({ user, url }) => {
+    sendVerificationEmail: async ({ user, token }) => {
+      const dashboard = `${frontendUrl}/dashboard`;
+      const verifyLink = `${frontendUrl}/verify-email?token=${encodeURIComponent(token)}&callbackURL=${encodeURIComponent(dashboard)}`;
       void sendEmail({
         to: user.email,
         subject: "Verify your Dialcues email",
@@ -45,10 +47,10 @@ export const auth = betterAuth({
           <h2>Email Verification</h2>
           <p>Hi ${user.name || "there"},</p>
           <p>Thanks for signing up! Please verify your email address by clicking the link below:</p>
-          <p><a href="${url}" style="display:inline-block;padding:12px 24px;background:#4f46e5;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">Verify email</a></p>
+          <p><a href="${verifyLink}" style="display:inline-block;padding:12px 24px;background:#4f46e5;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">Verify email</a></p>
           <p style="color:#6b7280;font-size:14px;">If you didn't create an account, you can safely ignore this email.</p>
         `,
-        text: `Verify your email: ${url}`,
+        text: `Verify your email: ${verifyLink}`,
       });
     },
   },
