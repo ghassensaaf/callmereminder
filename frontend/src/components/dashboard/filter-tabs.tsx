@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils";
 import { ReminderStatus } from "@/types/reminder";
 
-type FilterOption = ReminderStatus | "all" | "history";
+type FilterOption = ReminderStatus | "all";
 
 interface FilterTabsProps {
   value: FilterOption;
@@ -14,7 +14,6 @@ const tabs: { value: FilterOption; label: string }[] = [
   { value: "all", label: "All" },
   { value: "scheduled", label: "Scheduled" },
   { value: "paused", label: "Paused" },
-  { value: "history", label: "History" },
   { value: "completed", label: "Completed" },
   { value: "failed", label: "Failed" },
 ];

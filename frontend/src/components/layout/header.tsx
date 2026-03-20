@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { Settings, LogOut, Menu, X } from "lucide-react";
 
 import { Button, ThemeToggle } from "@/components/ui";
@@ -12,6 +13,7 @@ import { useSession, signOut } from "@/lib/auth-client";
 export function Header() {
   const { data: session, isPending } = useSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
 
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
@@ -64,9 +66,14 @@ export function Header() {
           {/* Desktop Navigation & Actions */}
           <div className="hidden md:flex items-center gap-1">
             {session && (
-              <NavLink href="/dashboard" active>
+              <>
+                <NavLink href="/dashboard" active={pathname === "/dashboard"}>
                 Dashboard
-              </NavLink>
+                </NavLink>
+                <NavLink href="/history" active={pathname === "/history"}>
+                  History
+                </NavLink>
+              </>
             )}
           </div>
 
@@ -132,14 +139,36 @@ export function Header() {
               <Link
                 href="/dashboard"
                 onClick={closeMobileMenu}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl text-surface-700 dark:text-surface-200 hover:bg-surface-100 dark:hover:bg-surface-800 font-medium"
+                className={cn(
+                  "flex items-center gap-3 px-4 py-3 rounded-xl font-medium",
+                  pathname === "/dashboard"
+                    ? "text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-950/40"
+                    : "text-surface-700 dark:text-surface-200 hover:bg-surface-100 dark:hover:bg-surface-800"
+                )}
               >
                 Dashboard
               </Link>
               <Link
+                href="/history"
+                onClick={closeMobileMenu}
+                className={cn(
+                  "flex items-center gap-3 px-4 py-3 rounded-xl font-medium",
+                  pathname === "/history"
+                    ? "text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-950/40"
+                    : "text-surface-700 dark:text-surface-200 hover:bg-surface-100 dark:hover:bg-surface-800"
+                )}
+              >
+                History
+              </Link>
+              <Link
                 href="/settings"
                 onClick={closeMobileMenu}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl text-surface-700 dark:text-surface-200 hover:bg-surface-100 dark:hover:bg-surface-800 font-medium"
+                className={cn(
+                  "flex items-center gap-3 px-4 py-3 rounded-xl font-medium",
+                  pathname === "/settings"
+                    ? "text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-950/40"
+                    : "text-surface-700 dark:text-surface-200 hover:bg-surface-100 dark:hover:bg-surface-800"
+                )}
               >
                 <Settings className="h-4 w-4" />
                 Settings
@@ -179,7 +208,7 @@ export function Header() {
 interface NavLinkProps {
   href: string;
   children: React.ReactNode;
-  active?: boolean;
+  active: boolean;
 }
 
 function NavLink({ href, children, active }: NavLinkProps) {

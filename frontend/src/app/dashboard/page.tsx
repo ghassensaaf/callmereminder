@@ -8,19 +8,17 @@ import { Plus } from "lucide-react";
 import { Header } from "@/components/layout";
 import { AuthGuard } from "@/components/auth-guard";
 import { FilterTabs, SearchInput, VapiConfigWarning } from "@/components/dashboard";
-import { ReminderForm, ReminderList, ExecutionList, StatsCards } from "@/components/reminder";
+import { ReminderForm, ReminderList, StatsCards } from "@/components/reminder";
 import { Button, Modal } from "@/components/ui";
 import { settingsApi } from "@/lib/api";
 import { ReminderStatus } from "@/types/reminder";
 
-type FilterOption = ReminderStatus | "all" | "history";
+type FilterOption = ReminderStatus | "all";
 
 export default function DashboardPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [filter, setFilter] = useState<FilterOption>("all");
   const [search, setSearch] = useState("");
-  const [historyDateFrom, setHistoryDateFrom] = useState("");
-  const [historyDateTo, setHistoryDateTo] = useState("");
   const [listDateFrom, setListDateFrom] = useState("");
   const [listDateTo, setListDateTo] = useState("");
 
@@ -106,16 +104,15 @@ export default function DashboardPage() {
           />
         </motion.div>
 
-        {/* Reminder List or History */}
-        {filter === "history" ? (
-          <div className="space-y-4">
+        <div className="space-y-4">
+          {(filter === "completed" || filter === "failed" || filter === "all") && (
             <div className="flex flex-wrap items-center gap-4">
               <label className="text-sm text-surface-600 dark:text-surface-400">
                 From:{" "}
                 <input
                   type="date"
-                  value={historyDateFrom}
-                  onChange={(e) => setHistoryDateFrom(e.target.value)}
+                  value={listDateFrom}
+                  onChange={(e) => setListDateFrom(e.target.value)}
                   className="ml-2 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 px-3 py-1.5 text-sm"
                 />
               </label>
@@ -123,53 +120,22 @@ export default function DashboardPage() {
                 To:{" "}
                 <input
                   type="date"
-                  value={historyDateTo}
-                  onChange={(e) => setHistoryDateTo(e.target.value)}
+                  value={listDateTo}
+                  onChange={(e) => setListDateTo(e.target.value)}
                   className="ml-2 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 px-3 py-1.5 text-sm"
                 />
               </label>
             </div>
-            <ExecutionList
-              dateFrom={historyDateFrom || undefined}
-              dateTo={historyDateTo || undefined}
-              onCreateClick={() => !needsVapiSetup && setIsCreateModalOpen(true)}
-              needsVapiSetup={needsVapiSetup}
-            />
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {(filter === "completed" || filter === "failed" || filter === "all") && (
-              <div className="flex flex-wrap items-center gap-4">
-                <label className="text-sm text-surface-600 dark:text-surface-400">
-                  From:{" "}
-                  <input
-                    type="date"
-                    value={listDateFrom}
-                    onChange={(e) => setListDateFrom(e.target.value)}
-                    className="ml-2 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 px-3 py-1.5 text-sm"
-                  />
-                </label>
-                <label className="text-sm text-surface-600 dark:text-surface-400">
-                  To:{" "}
-                  <input
-                    type="date"
-                    value={listDateTo}
-                    onChange={(e) => setListDateTo(e.target.value)}
-                    className="ml-2 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 px-3 py-1.5 text-sm"
-                  />
-                </label>
-              </div>
-            )}
-            <ReminderList
-              status={filter}
-              search={search}
-              dateFrom={listDateFrom || undefined}
-              dateTo={listDateTo || undefined}
-              onCreateClick={() => !needsVapiSetup && setIsCreateModalOpen(true)}
-              needsVapiSetup={needsVapiSetup}
-            />
-          </div>
-        )}
+          )}
+          <ReminderList
+            status={filter}
+            search={search}
+            dateFrom={listDateFrom || undefined}
+            dateTo={listDateTo || undefined}
+            onCreateClick={() => !needsVapiSetup && setIsCreateModalOpen(true)}
+            needsVapiSetup={needsVapiSetup}
+          />
+        </div>
       </main>
 
       {/* Create Reminder Modal */}
