@@ -5,8 +5,9 @@ import prisma from "./prisma.js";
  * @param {string} userId
  */
 export async function getMembershipForUser(userId) {
-  return prisma.member.findUnique({
+  return prisma.member.findFirst({
     where: { userId },
+    orderBy: { createdAt: "asc" },
     include: { organization: true },
   });
 }

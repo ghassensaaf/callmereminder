@@ -63,7 +63,7 @@ export const auth = betterAuth({
       },
       organizationHooks: {
         beforeCreateOrganization: async ({ user }) => {
-          const existing = await prisma.member.findUnique({ where: { userId: user.id } });
+          const existing = await prisma.member.findFirst({ where: { userId: user.id } });
           if (existing) {
             throw APIError.from("BAD_REQUEST", {
               message: "You already belong to an organization.",
@@ -71,7 +71,7 @@ export const auth = betterAuth({
           }
         },
         beforeAcceptInvitation: async ({ invitation, user }) => {
-          const existing = await prisma.member.findUnique({ where: { userId: user.id } });
+          const existing = await prisma.member.findFirst({ where: { userId: user.id } });
           if (existing) {
             if (existing.organizationId === invitation.organizationId) {
               throw APIError.from("BAD_REQUEST", {
@@ -84,7 +84,7 @@ export const auth = betterAuth({
           }
         },
         beforeAddMember: async ({ member }) => {
-          const existing = await prisma.member.findUnique({ where: { userId: member.userId } });
+          const existing = await prisma.member.findFirst({ where: { userId: member.userId } });
           if (existing && existing.organizationId !== member.organizationId) {
             throw APIError.from("BAD_REQUEST", {
               message: "This user already belongs to another organization.",

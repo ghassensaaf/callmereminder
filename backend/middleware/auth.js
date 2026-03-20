@@ -1,6 +1,6 @@
 import { fromNodeHeaders } from "better-auth/node";
 import { auth } from "../auth.js";
-import prisma from "../lib/prisma.js";
+import { getMembershipForUser } from "../lib/org.js";
 
 export async function requireAuth(req, res, next) {
   const session = await auth.api.getSession({
@@ -20,10 +20,7 @@ export async function requireAuth(req, res, next) {
  */
 export async function requireOrg(req, res, next) {
   try {
-    const membership = await prisma.member.findUnique({
-      where: { userId: req.user.id },
-      include: { organization: true },
-    });
+    const membership = await getMembershipForUser(req.user.id);
     if (!membership) {
       return res.status(400).json({ detail: "No organization. Complete onboarding first." });
     }
@@ -41,7 +38,7 @@ export function requireOrgRole(...allowedRoles) {
     try {
       let membership = req.orgMembership;
       if (!membership || membership.userId !== req.user.id) {
-        membership = await prisma.member.findUnique({ where: { userId: req.user.id } });
+        membership = await getMembershipForUser(req.user.id);
       }
       if (!membership) {
         return res.status(403).json({ detail: "You are not a member of an organization." });

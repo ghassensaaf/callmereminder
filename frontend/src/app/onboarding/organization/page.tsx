@@ -12,6 +12,12 @@ import Image from "next/image";
 import { AuthGuard } from "@/components/auth-guard";
 import { Button, Card, Input, Badge } from "@/components/ui";
 import { organizationApi, settingsApi } from "@/lib/api";
+import {
+  parseOrganizationApiError,
+  settingsFromAcceptMember,
+  settingsFromCreatedOrganization,
+  type SettingsPayload,
+} from "@/lib/onboarding-org";
 import { signOut, useSession } from "@/lib/auth-client";
 
 function slugify(input: string) {
@@ -64,15 +70,35 @@ export default function OrganizationOnboardingPage() {
       toast.error("A valid slug is required");
       return;
     }
+    if (settings?.organizationId) {
+      router.replace("/dashboard");
+      return;
+    }
     setIsCreating(true);
     try {
-      await organizationApi.create({ name: orgName.trim(), slug: effectiveSlug });
-      await queryClient.refetchQueries({ queryKey: ["settings"] });
+      const created = await organizationApi.create({ name: orgName.trim(), slug: effectiveSlug });
+
+      queryClient.setQueryData(["settings"], (prev) =>
+        settingsFromCreatedOrganization(prev as SettingsPayload | undefined, created)
+      );
+
+      await queryClient.invalidateQueries({ queryKey: ["settings"] });
+      const fresh = await queryClient.fetchQuery({
+        queryKey: ["settings"],
+        queryFn: () => settingsApi.get(),
+      });
+
+      if (!fresh.organizationId) {
+        queryClient.setQueryData(["settings"], (prev) =>
+          settingsFromCreatedOrganization(prev as SettingsPayload | undefined, created)
+        );
+      }
+
       toast.success("Organization created");
       router.replace("/dashboard");
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(
-        err?.response?.data?.message || err?.response?.data?.detail || "Failed to create organization"
+        parseOrganizationApiError(err, "Failed to create organization")
       );
     } finally {
       setIsCreating(false);
@@ -81,8 +107,21 @@ export default function OrganizationOnboardingPage() {
 
   async function handleAccept(invitationId: string) {
     try {
-      await organizationApi.acceptInvitation(invitationId);
-      await queryClient.refetchQueries({ queryKey: ["settings"] });
+      const result = await organizationApi.acceptInvitation(invitationId);
+      await queryClient.invalidateQueries({ queryKey: ["settings"] });
+      const fresh = await queryClient.fetchQuery({
+        queryKey: ["settings"],
+        queryFn: () => settingsApi.get(),
+      });
+      if (!fresh.organizationId && result.member?.organizationId) {
+        queryClient.setQueryData(["settings"], (prev) =>
+          settingsFromAcceptMember(
+            prev as SettingsPayload | undefined,
+            result.member.organizationId,
+            result.member.role
+          )
+        );
+      }
       await queryClient.invalidateQueries({ queryKey: ["my-invitations"] });
       toast.success("Invitation accepted — welcome to the team!");
       router.replace("/dashboard");
@@ -100,6 +139,8 @@ export default function OrganizationOnboardingPage() {
       toast.error("Failed to decline invitation");
     }
   }
+
+  const alreadyInOrg = !!settings?.organizationId;
 
   return (
     <AuthGuard requireOrg={false}>
@@ -131,6 +172,12 @@ export default function OrganizationOnboardingPage() {
               Every Dialcues account belongs to an organization. Create one for your company or join an existing team.
             </p>
           </div>
+
+          {alreadyInOrg && (
+            <p className="text-center text-sm text-surface-600 dark:text-surface-300 mb-4">
+              Redirecting to your dashboard…
+            </p>
+          )}
 
           {pendingInvitations.length > 0 && (
             <Card variant="elevated" className="p-6 mb-6">
@@ -193,6 +240,7 @@ export default function OrganizationOnboardingPage() {
                 value={orgName}
                 onChange={(e) => setOrgName(e.target.value)}
                 placeholder="Acme Inc."
+                disabled={alreadyInOrg}
               />
               <Input
                 label="Slug"
@@ -200,11 +248,13 @@ export default function OrganizationOnboardingPage() {
                 onChange={(e) => setOrgSlug(e.target.value)}
                 placeholder="acme-inc"
                 hint={`URL identifier: ${effectiveSlug || "—"}`}
+                disabled={alreadyInOrg}
               />
               <Button
                 type="button"
                 className="w-full"
                 isLoading={isCreating}
+                disabled={alreadyInOrg}
                 onClick={handleCreate}
               >
                 Create organization

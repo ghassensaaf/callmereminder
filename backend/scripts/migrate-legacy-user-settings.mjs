@@ -42,7 +42,7 @@ async function main() {
 
   for (const row of rows) {
     const userId = row.userId;
-    const membership = await prisma.member.findUnique({ where: { userId } });
+    const membership = await prisma.member.findFirst({ where: { userId } });
     if (!membership) {
       console.log(`Skip user ${userId}: no organization membership`);
       continue;

@@ -243,7 +243,12 @@ export const organizationApi = {
   },
   create: async (data: { name: string; slug: string }) => {
     const response = await api.post("/api/auth/organization/create", data);
-    return response.data;
+    return response.data as {
+      id: string;
+      name: string;
+      slug: string;
+      members?: Array<{ role: string; userId: string }>;
+    };
   },
   getFull: async (organizationId: string) => {
     const response = await api.get("/api/auth/organization/get-full-organization", {
@@ -293,7 +298,10 @@ export const organizationApi = {
     const response = await api.post("/api/auth/organization/accept-invitation", {
       invitationId,
     });
-    return response.data;
+    return response.data as {
+      member: { id: string; organizationId: string; role: string; userId: string };
+      invitation: unknown;
+    };
   },
   rejectInvitation: async (invitationId: string) => {
     const response = await api.post("/api/auth/organization/reject-invitation", {
