@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { signUp } from "@/lib/auth-client";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { Button, Input, Card } from "@/components/ui";
 
@@ -28,6 +29,8 @@ const signupSchema = z.object({
 type SignupFormData = z.infer<typeof signupSchema>;
 
 export default function SignupPage() {
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || "/dashboard";
   const [apiError, setApiError] = useState("");
   const {
     register,
@@ -45,13 +48,13 @@ export default function SignupPage() {
         name: data.name,
         email: data.email,
         password: data.password,
-        callbackURL: "/dashboard",
+        callbackURL: redirectTo,
       });
       if (result.error) {
         setApiError(result.error.message || "Invalid input. Please check your details.");
         return;
       }
-      window.location.href = "/dashboard";
+      window.location.href = redirectTo;
     } catch {
       setApiError("Something went wrong. Please try again.");
     }

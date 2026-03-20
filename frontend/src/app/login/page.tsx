@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { signIn } from "@/lib/auth-client";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { Button, Input, Card } from "@/components/ui";
 
@@ -23,6 +24,8 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || "/dashboard";
   const [apiError, setApiError] = useState("");
   const {
     register,
@@ -39,13 +42,13 @@ export default function LoginPage() {
       const result = await signIn.email({
         email: data.email,
         password: data.password,
-        callbackURL: "/dashboard",
+        callbackURL: redirectTo,
       });
       if (result.error) {
         setApiError(result.error.message || "Invalid email or password");
         return;
       }
-      window.location.href = "/dashboard";
+      window.location.href = redirectTo;
     } catch {
       setApiError("Something went wrong. Please try again.");
     }
@@ -105,6 +108,11 @@ export default function LoginPage() {
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting ? "Signing in..." : "Sign in"}
             </Button>
+            <div className="text-right">
+              <Link href="/forgot-password" className="text-sm text-primary-600 dark:text-primary-400 font-medium hover:underline">
+                Forgot password?
+              </Link>
+            </div>
           </form>
 
           <p className="mt-6 text-center text-sm text-surface-500 dark:text-surface-400">

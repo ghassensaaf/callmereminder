@@ -1,6 +1,6 @@
 import { Router } from "express";
 import prisma from "../lib/prisma.js";
-import { requireAuth } from "../middleware/auth.js";
+import { requireAuth, requireOrg, requireOrgRole } from "../middleware/auth.js";
 import { validateVapiConfig } from "../services/vapi.js";
 import { generateBusinessPrompt } from "../services/prompt-generator.js";
 import { userHasOutboundLine } from "../lib/vapi-integration.js";
@@ -118,12 +118,9 @@ router.post("/test", requireAuth, async (req, res) => {
   }
 });
 
-router.put("/prompt", requireAuth, async (req, res) => {
+router.put("/prompt", requireAuth, requireOrg, requireOrgRole("owner", "admin"), async (req, res) => {
   try {
-    const organizationId = await resolveActiveOrganizationId(req);
-    if (!organizationId) {
-      return res.status(400).json({ detail: "Join or create an organization first." });
-    }
+    const organizationId = req.activeOrganizationId;
     const mode = (req.body.mode || "default").toLowerCase();
     if (!PROMPT_MODES.includes(mode)) {
       return res.status(400).json({ detail: "Invalid mode. Use default, custom, or generated." });
@@ -176,12 +173,9 @@ router.put("/prompt", requireAuth, async (req, res) => {
   }
 });
 
-router.post("/prompt/generate", requireAuth, async (req, res) => {
+router.post("/prompt/generate", requireAuth, requireOrg, requireOrgRole("owner", "admin"), async (req, res) => {
   try {
-    const organizationId = await resolveActiveOrganizationId(req);
-    if (!organizationId) {
-      return res.status(400).json({ detail: "Join or create an organization first." });
-    }
+    const organizationId = req.activeOrganizationId;
     const businessName = (req.body.businessName || "").trim();
     const industry = (req.body.industry || "").trim();
     const tone = (req.body.tone || "").trim();

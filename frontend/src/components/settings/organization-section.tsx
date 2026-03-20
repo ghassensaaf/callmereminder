@@ -22,7 +22,7 @@ export function OrganizationSection() {
   const [orgName, setOrgName] = useState("");
   const [orgSlug, setOrgSlug] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState<"member" | "admin" | "owner">("member");
+  const [inviteRole, setInviteRole] = useState<"member" | "admin">("member");
   const [isCreating, setIsCreating] = useState(false);
   const [isInviting, setIsInviting] = useState(false);
 
@@ -208,11 +208,10 @@ export function OrganizationSection() {
               <select
                 className="w-full rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 px-3 py-2.5 text-sm"
                 value={inviteRole}
-                onChange={(e) => setInviteRole(e.target.value as "member" | "admin" | "owner")}
+                onChange={(e) => setInviteRole(e.target.value as "member" | "admin")}
               >
-                <option value="member">member</option>
-                <option value="admin">admin</option>
-                <option value="owner">owner</option>
+                <option value="member">Member</option>
+                <option value="admin">Admin</option>
               </select>
             </div>
           </div>
