@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
@@ -16,14 +16,12 @@ const loginSchema = z.object({
     .string()
     .min(1, "Please enter your email address")
     .email("Please enter a valid email address"),
-  password: z
-    .string()
-    .min(1, "Please enter your password"),
+  password: z.string().min(1, "Please enter your password"),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
-export default function LoginPage() {
+function LoginForm() {
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/dashboard";
   const [apiError, setApiError] = useState("");
@@ -109,7 +107,10 @@ export default function LoginPage() {
               {isSubmitting ? "Signing in..." : "Sign in"}
             </Button>
             <div className="text-right">
-              <Link href="/forgot-password" className="text-sm text-primary-600 dark:text-primary-400 font-medium hover:underline">
+              <Link
+                href="/forgot-password"
+                className="text-sm text-primary-600 dark:text-primary-400 font-medium hover:underline"
+              >
                 Forgot password?
               </Link>
             </div>
@@ -124,5 +125,21 @@ export default function LoginPage() {
         </Card>
       </motion.div>
     </div>
+  );
+}
+
+function LoginFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="animate-pulse text-surface-500">Loading...</div>
+    </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginFallback />}>
+      <LoginForm />
+    </Suspense>
   );
 }

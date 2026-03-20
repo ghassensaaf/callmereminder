@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
@@ -8,7 +8,7 @@ import { authClient, useSession } from "@/lib/auth-client";
 import Image from "next/image";
 import { Button, Card } from "@/components/ui";
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const urlError = searchParams.get("error");
   const { data: session } = useSession();
@@ -73,7 +73,9 @@ export default function VerifyEmailPage() {
                 </div>
               ) : null}
               <Link href="/login">
-                <Button variant="outline" className="w-full">Go to sign in</Button>
+                <Button variant="outline" className="w-full">
+                  Go to sign in
+                </Button>
               </Link>
             </>
           ) : verified ? (
@@ -107,12 +109,30 @@ export default function VerifyEmailPage() {
                 </div>
               ) : null}
               <Link href="/dashboard">
-                <Button variant="ghost" className="w-full">Continue to dashboard</Button>
+                <Button variant="ghost" className="w-full">
+                  Continue to dashboard
+                </Button>
               </Link>
             </>
           )}
         </Card>
       </motion.div>
     </div>
+  );
+}
+
+function VerifyEmailFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="animate-pulse text-surface-500">Loading...</div>
+    </div>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={<VerifyEmailFallback />}>
+      <VerifyEmailContent />
+    </Suspense>
   );
 }

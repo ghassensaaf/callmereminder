@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
@@ -28,7 +28,7 @@ const signupSchema = z.object({
 
 type SignupFormData = z.infer<typeof signupSchema>;
 
-export default function SignupPage() {
+function SignupForm() {
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/dashboard";
   const [apiError, setApiError] = useState("");
@@ -134,5 +134,21 @@ export default function SignupPage() {
         </Card>
       </motion.div>
     </div>
+  );
+}
+
+function SignupFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="animate-pulse text-surface-500">Loading...</div>
+    </div>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={<SignupFallback />}>
+      <SignupForm />
+    </Suspense>
   );
 }
