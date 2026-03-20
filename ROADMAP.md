@@ -13,7 +13,8 @@ What the app already does; keep this section updated when you release features.
 ### Account & telephony (BYO Vapi)
 
 - Sign up / sign in
-- Vapi integration: API keys, multiple outbound numbers, default line per reminder
+- **Single organization per user:** onboarding (create org or accept invite), membership roles (owner / admin / member)
+- **Organization-scoped** Vapi integration: API keys and numbers shared by the workspace; owners/admins configure
 - In-app docs for configuring Vapi
 
 ### Reminders & scheduling
@@ -32,7 +33,7 @@ What the app already does; keep this section updated when you release features.
 
 ### Quality-of-life
 
-- Reminder **message templates** (create in Settings, apply when composing)
+- Reminder **message templates** (org-wide; owners/admins manage in Settings, apply when composing)
 - Dashboard filters, stats, search
 
 ---

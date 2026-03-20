@@ -1,6 +1,6 @@
 import { Router } from "express";
 import prisma from "../lib/prisma.js";
-import { requireAuth } from "../middleware/auth.js";
+import { requireAuth, requireOrg, requireOrgRole } from "../middleware/auth.js";
 import { validateVapiConfig } from "../services/vapi.js";
 import {
   unsetOtherDefaultConfigs,
@@ -31,11 +31,13 @@ function formatConfig(c) {
 }
 
 router.use(requireAuth);
+router.use(requireOrg);
 
 router.get("/", async (req, res) => {
   try {
+    const orgId = req.organizationId;
     const configs = await prisma.vapiConfig.findMany({
-      where: { userId: req.user.id },
+      where: { organizationId: orgId },
       include: { numbers: { orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }] } },
       orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
     });
@@ -55,27 +57,28 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.post("/", async (req, res) => {
+router.post("/", requireOrgRole("owner", "admin"), async (req, res) => {
   try {
+    const orgId = req.organizationId;
     const name = req.body.name?.trim();
     const vapiApiKey = req.body.vapiApiKey?.trim();
     if (!name || !vapiApiKey) {
       return res.status(400).json({ detail: "name and vapiApiKey are required" });
     }
 
-    const count = await prisma.vapiConfig.count({ where: { userId: req.user.id } });
+    const count = await prisma.vapiConfig.count({ where: { organizationId: orgId } });
     const shouldBeDefault = count === 0 || req.body.is_default === true;
 
     const config = await prisma.$transaction(async (tx) => {
       if (shouldBeDefault) {
         await tx.vapiConfig.updateMany({
-          where: { userId: req.user.id, isDefault: true },
+          where: { organizationId: orgId, isDefault: true },
           data: { isDefault: false },
         });
       }
       return tx.vapiConfig.create({
         data: {
-          userId: req.user.id,
+          organizationId: orgId,
           name: name.slice(0, 100),
           vapiApiKey,
           isDefault: shouldBeDefault,
@@ -94,11 +97,12 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.patch("/numbers/:numberId", async (req, res) => {
+router.patch("/numbers/:numberId", requireOrgRole("owner", "admin"), async (req, res) => {
   try {
+    const orgId = req.organizationId;
     const numberId = req.params.numberId;
     const existing = await prisma.vapiPhoneNumber.findFirst({
-      where: { id: numberId, config: { userId: req.user.id } },
+      where: { id: numberId, config: { organizationId: orgId } },
       include: { config: true },
     });
     if (!existing) return res.status(404).json({ detail: "Number not found" });
@@ -133,11 +137,12 @@ router.patch("/numbers/:numberId", async (req, res) => {
   }
 });
 
-router.delete("/numbers/:numberId", async (req, res) => {
+router.delete("/numbers/:numberId", requireOrgRole("owner", "admin"), async (req, res) => {
   try {
+    const orgId = req.organizationId;
     const numberId = req.params.numberId;
     const existing = await prisma.vapiPhoneNumber.findFirst({
-      where: { id: numberId, config: { userId: req.user.id } },
+      where: { id: numberId, config: { organizationId: orgId } },
     });
     if (!existing) return res.status(404).json({ detail: "Number not found" });
 
@@ -163,11 +168,12 @@ router.delete("/numbers/:numberId", async (req, res) => {
   }
 });
 
-router.patch("/:configId", async (req, res) => {
+router.patch("/:configId", requireOrgRole("owner", "admin"), async (req, res) => {
   try {
+    const orgId = req.organizationId;
     const configId = req.params.configId;
     const existing = await prisma.vapiConfig.findFirst({
-      where: { id: configId, userId: req.user.id },
+      where: { id: configId, organizationId: orgId },
       include: { numbers: true },
     });
     if (!existing) return res.status(404).json({ detail: "Config not found" });
@@ -206,23 +212,24 @@ router.patch("/:configId", async (req, res) => {
   }
 });
 
-router.delete("/:configId", async (req, res) => {
+router.delete("/:configId", requireOrgRole("owner", "admin"), async (req, res) => {
   try {
+    const orgId = req.organizationId;
     const configId = req.params.configId;
     const existing = await prisma.vapiConfig.findFirst({
-      where: { id: configId, userId: req.user.id },
+      where: { id: configId, organizationId: orgId },
     });
     if (!existing) return res.status(404).json({ detail: "Config not found" });
 
     await prisma.vapiConfig.delete({ where: { id: configId } });
 
     const remaining = await prisma.vapiConfig.findMany({
-      where: { userId: req.user.id },
+      where: { organizationId: orgId },
       orderBy: { createdAt: "asc" },
     });
     if (remaining.length && !remaining.some((c) => c.isDefault)) {
       await prisma.vapiConfig.updateMany({
-        where: { userId: req.user.id },
+        where: { organizationId: orgId },
         data: { isDefault: false },
       });
       await prisma.vapiConfig.update({
@@ -238,17 +245,18 @@ router.delete("/:configId", async (req, res) => {
   }
 });
 
-router.post("/:configId/set-default", async (req, res) => {
+router.post("/:configId/set-default", requireOrgRole("owner", "admin"), async (req, res) => {
   try {
+    const orgId = req.organizationId;
     const configId = req.params.configId;
     const existing = await prisma.vapiConfig.findFirst({
-      where: { id: configId, userId: req.user.id },
+      where: { id: configId, organizationId: orgId },
       include: { numbers: { orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }] } },
     });
     if (!existing) return res.status(404).json({ detail: "Config not found" });
 
     await prisma.$transaction(async (tx) => {
-      await unsetOtherDefaultConfigs(tx, req.user.id, configId);
+      await unsetOtherDefaultConfigs(tx, orgId, configId);
       await tx.vapiConfig.update({ where: { id: configId }, data: { isDefault: true } });
     });
 
@@ -263,11 +271,12 @@ router.post("/:configId/set-default", async (req, res) => {
   }
 });
 
-router.post("/:configId/numbers", async (req, res) => {
+router.post("/:configId/numbers", requireOrgRole("owner", "admin"), async (req, res) => {
   try {
+    const orgId = req.organizationId;
     const configId = req.params.configId;
     const config = await prisma.vapiConfig.findFirst({
-      where: { id: configId, userId: req.user.id },
+      where: { id: configId, organizationId: orgId },
       include: { numbers: true },
     });
     if (!config) return res.status(404).json({ detail: "Config not found" });

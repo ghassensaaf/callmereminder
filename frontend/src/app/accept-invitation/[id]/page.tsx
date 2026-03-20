@@ -6,7 +6,6 @@ import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
 import { authClient, useSession } from "@/lib/auth-client";
-import { organizationApi } from "@/lib/api";
 import Image from "next/image";
 import { Button, Card } from "@/components/ui";
 
@@ -29,28 +28,13 @@ export default function AcceptInvitationPage() {
 
     setStatus("accepting");
     (async () => {
-      let organizationId: string | null = null;
-      try {
-        const inv = await organizationApi.getInvitation(id as string);
-        organizationId = inv?.organizationId ?? null;
-      } catch {
-        /* continue; accept may still succeed */
-      }
       const result = await authClient.organization.acceptInvitation({ invitationId: id });
       if (result.error) {
         setErrorMsg(result.error.message || "Failed to accept invitation.");
         setStatus("error");
         return;
       }
-      if (organizationId) {
-        try {
-          await organizationApi.setActive(organizationId);
-        } catch {
-          /* ignore */
-        }
-      }
       await queryClient.refetchQueries({ queryKey: ["settings"] });
-      await queryClient.refetchQueries({ queryKey: ["organizations"] });
       setStatus("success");
       setTimeout(() => {
         window.location.assign("/dashboard");

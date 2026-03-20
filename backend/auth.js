@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { organization } from "better-auth/plugins";
+import { APIError } from "@better-auth/core/error";
 import prisma from "./lib/prisma.js";
 import { dash } from "@better-auth/infra";
 import { sendEmail } from "./services/email.js";
@@ -56,8 +57,40 @@ export const auth = betterAuth({
   },
   plugins: [
     organization({
+      organizationLimit: 1,
       teams: {
         enabled: true,
+      },
+      organizationHooks: {
+        beforeCreateOrganization: async ({ user }) => {
+          const existing = await prisma.member.findUnique({ where: { userId: user.id } });
+          if (existing) {
+            throw APIError.from("BAD_REQUEST", {
+              message: "You already belong to an organization.",
+            });
+          }
+        },
+        beforeAcceptInvitation: async ({ invitation, user }) => {
+          const existing = await prisma.member.findUnique({ where: { userId: user.id } });
+          if (existing) {
+            if (existing.organizationId === invitation.organizationId) {
+              throw APIError.from("BAD_REQUEST", {
+                message: "You are already a member of this organization.",
+              });
+            }
+            throw APIError.from("BAD_REQUEST", {
+              message: "You already belong to an organization. You cannot join another.",
+            });
+          }
+        },
+        beforeAddMember: async ({ member }) => {
+          const existing = await prisma.member.findUnique({ where: { userId: member.userId } });
+          if (existing && existing.organizationId !== member.organizationId) {
+            throw APIError.from("BAD_REQUEST", {
+              message: "This user already belongs to another organization.",
+            });
+          }
+        },
       },
       async sendInvitationEmail(data) {
         const inviteLink = `${frontendUrl}/accept-invitation/${data.id}`;

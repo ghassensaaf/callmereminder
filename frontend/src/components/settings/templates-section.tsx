@@ -6,13 +6,20 @@ import toast from "react-hot-toast";
 import { FileText, Plus, Trash2 } from "lucide-react";
 
 import { Button, Input, Textarea, Card, Modal } from "@/components/ui";
-import { templatesApi } from "@/lib/api";
+import { settingsApi, templatesApi } from "@/lib/api";
 
 export function TemplatesSection() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newMessage, setNewMessage] = useState("");
   const queryClient = useQueryClient();
+
+  const { data: settings } = useQuery({
+    queryKey: ["settings"],
+    queryFn: () => settingsApi.get(),
+  });
+  const canManage =
+    settings?.organizationRole === "owner" || settings?.organizationRole === "admin";
 
   const { data: templates, isLoading } = useQuery({
     queryKey: ["templates"],
@@ -56,18 +63,26 @@ export function TemplatesSection() {
             <FileText className="h-4 w-4" />
             Reminder Templates
           </h2>
-          <Button
-            variant="outline"
-            size="sm"
-            leftIcon={<Plus className="h-4 w-4" />}
-            onClick={() => setIsCreateOpen(true)}
-          >
-            Add template
-          </Button>
+          {canManage && (
+            <Button
+              variant="outline"
+              size="sm"
+              leftIcon={<Plus className="h-4 w-4" />}
+              onClick={() => setIsCreateOpen(true)}
+            >
+              Add template
+            </Button>
+          )}
         </div>
         <p className="text-sm text-surface-500 dark:text-surface-400 mb-4">
-          Save common reminder title and message combinations. Use them when creating reminders from the dashboard.
+          Organization-wide templates: shared title and message presets for reminders. Only owners and admins can add or
+          remove templates.
         </p>
+        {!canManage && (
+          <p className="text-sm text-surface-600 dark:text-surface-300 mb-4">
+            You can browse templates below; ask an owner or admin to edit them.
+          </p>
+        )}
 
         {isLoading ? (
           <p className="text-sm text-surface-500">Loading...</p>
@@ -86,16 +101,18 @@ export function TemplatesSection() {
                   <p className="font-medium text-surface-900 dark:text-surface-50 truncate">{t.title}</p>
                   <p className="text-sm text-surface-500 dark:text-surface-400 line-clamp-2 mt-0.5">{t.message}</p>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-danger-600 dark:text-danger-400 shrink-0"
-                  onClick={() => deleteMutation.mutate(t.id)}
-                  isLoading={deleteMutation.isPending}
-                  leftIcon={<Trash2 className="h-3.5 w-3.5" />}
-                >
-                  Delete
-                </Button>
+                {canManage && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-danger-600 dark:text-danger-400 shrink-0"
+                    onClick={() => deleteMutation.mutate(t.id)}
+                    isLoading={deleteMutation.isPending}
+                    leftIcon={<Trash2 className="h-3.5 w-3.5" />}
+                  >
+                    Delete
+                  </Button>
+                )}
               </li>
             ))}
           </ul>

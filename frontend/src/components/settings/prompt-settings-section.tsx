@@ -86,7 +86,9 @@ export function PromptSettingsSection() {
 
   const activePrompt =
     mode === "custom" ? customPrompt : mode === "generated" ? generatedPrompt : "";
-  const hasActiveOrganization = !!settings?.activeOrganizationId;
+  const hasOrganization = !!settings?.organizationId;
+  const canManage =
+    settings?.organizationRole === "owner" || settings?.organizationRole === "admin";
 
   return (
     <Card variant="elevated" className="p-6 space-y-4">
@@ -98,9 +100,14 @@ export function PromptSettingsSection() {
         <p className="text-sm text-surface-500 dark:text-surface-400 mt-1 max-w-xl">
           Choose how your company wants reminder calls to sound: default behavior, your own custom prompt, or an AI-generated prompt.
         </p>
-        {!hasActiveOrganization && (
+        {!hasOrganization && (
           <p className="text-sm text-warning-700 dark:text-warning-300 mt-2">
             Create or join an organization first to manage shared company prompts.
+          </p>
+        )}
+        {hasOrganization && !canManage && (
+          <p className="text-sm text-surface-600 dark:text-surface-300 mt-2">
+            Only owners and admins can edit the shared company prompt. You can view settings below.
           </p>
         )}
       </div>
@@ -118,9 +125,27 @@ export function PromptSettingsSection() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <Input label="Business name" value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="Acme Dental Clinic" />
-        <Input label="Industry" value={industry} onChange={(e) => setIndustry(e.target.value)} placeholder="Healthcare, retail, logistics..." />
-        <Input label="Tone" value={tone} onChange={(e) => setTone(e.target.value)} placeholder="Friendly, formal, concise..." />
+        <Input
+          label="Business name"
+          value={businessName}
+          onChange={(e) => setBusinessName(e.target.value)}
+          placeholder="Acme Dental Clinic"
+          readOnly={!canManage}
+        />
+        <Input
+          label="Industry"
+          value={industry}
+          onChange={(e) => setIndustry(e.target.value)}
+          placeholder="Healthcare, retail, logistics..."
+          readOnly={!canManage}
+        />
+        <Input
+          label="Tone"
+          value={tone}
+          onChange={(e) => setTone(e.target.value)}
+          placeholder="Friendly, formal, concise..."
+          readOnly={!canManage}
+        />
       </div>
 
       <Textarea
@@ -129,6 +154,7 @@ export function PromptSettingsSection() {
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
         placeholder="Compliance notes, wording preferences, what to avoid..."
+        readOnly={!canManage}
       />
 
       <div className="flex flex-wrap gap-2">
@@ -138,7 +164,7 @@ export function PromptSettingsSection() {
           size="sm"
           leftIcon={<Wand2 className="h-4 w-4" />}
           isLoading={generating}
-          disabled={!hasActiveOrganization}
+          disabled={!hasOrganization || !canManage}
           onClick={generatePrompt}
         >
           Generate prompt (free model)
@@ -152,6 +178,7 @@ export function PromptSettingsSection() {
         onChange={(e) => setCustomPrompt(e.target.value)}
         placeholder="Write your company's system prompt..."
         hint="Used only when mode is set to Custom prompt."
+        readOnly={!canManage}
       />
 
       <Textarea
@@ -161,6 +188,7 @@ export function PromptSettingsSection() {
         onChange={(e) => setGeneratedPrompt(e.target.value)}
         placeholder="AI-generated prompt appears here..."
         hint="Used only when mode is set to Generated prompt."
+        readOnly={!canManage}
       />
 
       {mode !== "default" && (
@@ -177,7 +205,7 @@ export function PromptSettingsSection() {
           type="button"
           leftIcon={<Save className="h-4 w-4" />}
           isLoading={saving}
-          disabled={!hasActiveOrganization}
+          disabled={!hasOrganization || !canManage}
           onClick={() => savePromptSettings(mode)}
         >
           Save prompt settings

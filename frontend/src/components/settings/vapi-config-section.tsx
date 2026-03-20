@@ -33,6 +33,13 @@ export function VapiConfigSection() {
 
   const [editingNumber, setEditingNumber] = useState<{ id: string; nickname: string } | null>(null);
 
+  const { data: settings } = useQuery({
+    queryKey: ["settings"],
+    queryFn: () => settingsApi.get(),
+  });
+  const canManage =
+    settings?.organizationRole === "owner" || settings?.organizationRole === "admin";
+
   const { data, isLoading } = useQuery({
     queryKey: ["vapi-configs"],
     queryFn: () => vapiConfigsApi.list(),
@@ -186,10 +193,14 @@ export function VapiConfigSection() {
             Vapi integrations
           </h2>
           <p className="text-sm text-surface-500 dark:text-surface-400 mt-1 max-w-xl">
-            Each configuration has a name and API key. Add multiple outbound numbers per key; each is validated with
-            Vapi before saving. Set a default account and a default number per account. New reminders use the default
-            line unless you pick another.
+            Organization-wide Vapi setup: each configuration has a name and API key. Add multiple outbound numbers per
+            key; each is validated with Vapi before saving. Only owners and admins can change these settings.
           </p>
+          {!canManage && (
+            <p className="text-sm text-surface-600 dark:text-surface-300 mt-2">
+              You can view this integration; ask an owner or admin to make changes.
+            </p>
+          )}
         </div>
         {!isLoading &&
           (hasNumbers ? (
@@ -205,7 +216,14 @@ export function VapiConfigSection() {
 
       <div className="space-y-4">
         {!addingConfig ? (
-          <Button type="button" variant="outline" size="sm" leftIcon={<Plus className="h-4 w-4" />} onClick={() => setAddingConfig(true)}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            leftIcon={<Plus className="h-4 w-4" />}
+            disabled={!canManage}
+            onClick={() => setAddingConfig(true)}
+          >
             Add configuration
           </Button>
         ) : (
@@ -226,7 +244,7 @@ export function VapiConfigSection() {
               </label>
             )}
             <div className="flex gap-2">
-              <Button type="button" onClick={handleAddConfig}>
+              <Button type="button" onClick={handleAddConfig} disabled={!canManage}>
                 Save
               </Button>
               <Button type="button" variant="ghost" onClick={() => setAddingConfig(false)}>
@@ -260,7 +278,13 @@ export function VapiConfigSection() {
               </div>
               <div className="flex flex-wrap gap-2">
                 {!config.is_default && (
-                  <Button type="button" variant="outline" size="sm" onClick={() => handleSetDefaultConfig(config.id)}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={!canManage}
+                    onClick={() => handleSetDefaultConfig(config.id)}
+                  >
                     Set default account
                   </Button>
                 )}
@@ -270,6 +294,7 @@ export function VapiConfigSection() {
                     variant="outline"
                     size="sm"
                     leftIcon={<Pencil className="h-3.5 w-3.5" />}
+                    disabled={!canManage}
                     onClick={() => {
                       setEditingConfig(config.id);
                       setEditName(config.name);
@@ -285,6 +310,7 @@ export function VapiConfigSection() {
                   size="sm"
                   className="text-danger-600 dark:text-danger-400 border-danger-200 dark:border-danger-800"
                   leftIcon={<Trash2 className="h-3.5 w-3.5" />}
+                  disabled={!canManage}
                   onClick={() => handleDeleteConfig(config.id)}
                 >
                   Delete
@@ -303,7 +329,13 @@ export function VapiConfigSection() {
                   onChange={(e) => setEditKey(e.target.value)}
                 />
                 <div className="flex gap-2">
-                  <Button type="button" size="sm" leftIcon={<Check className="h-4 w-4" />} onClick={() => handleSaveConfig(config)}>
+                  <Button
+                    type="button"
+                    size="sm"
+                    leftIcon={<Check className="h-4 w-4" />}
+                    disabled={!canManage}
+                    onClick={() => handleSaveConfig(config)}
+                  >
                     Save changes
                   </Button>
                   <Button
@@ -338,7 +370,7 @@ export function VapiConfigSection() {
                               value={editingNumber.nickname}
                               onChange={(e) => setEditingNumber({ id: n.id, nickname: e.target.value })}
                             />
-                            <Button type="button" variant="primary" size="sm" onClick={handleSaveNickname}>
+                            <Button type="button" variant="primary" size="sm" disabled={!canManage} onClick={handleSaveNickname}>
                               Save
                             </Button>
                             <Button type="button" variant="ghost" size="sm" onClick={() => setEditingNumber(null)}>
@@ -362,7 +394,13 @@ export function VapiConfigSection() {
                       {editingNumber?.id !== n.id && (
                         <div className="flex flex-wrap gap-1">
                           {!n.is_default && (
-                            <Button type="button" variant="ghost" size="sm" onClick={() => handleSetDefaultNumber(n.id)}>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              disabled={!canManage}
+                              onClick={() => handleSetDefaultNumber(n.id)}
+                            >
                               Set default line
                             </Button>
                           )}
@@ -371,6 +409,7 @@ export function VapiConfigSection() {
                             variant="ghost"
                             size="sm"
                             leftIcon={<Pencil className="h-3.5 w-3.5" />}
+                            disabled={!canManage}
                             onClick={() => setEditingNumber({ id: n.id, nickname: n.nickname })}
                           >
                             Rename
@@ -381,6 +420,7 @@ export function VapiConfigSection() {
                             size="sm"
                             className="text-danger-600 dark:text-danger-400"
                             leftIcon={<Trash2 className="h-3.5 w-3.5" />}
+                            disabled={!canManage}
                             onClick={() => handleDeleteNumber(n.id)}
                           >
                             Remove
@@ -408,7 +448,7 @@ export function VapiConfigSection() {
                   Default line for this account
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  <Button type="button" size="sm" onClick={() => handleAddNumber(config.id)}>
+                  <Button type="button" size="sm" disabled={!canManage} onClick={() => handleAddNumber(config.id)}>
                     Validate & add
                   </Button>
                   <Button type="button" variant="ghost" size="sm" onClick={() => setAddNumberFor(null)}>
@@ -422,6 +462,7 @@ export function VapiConfigSection() {
                 variant="outline"
                 size="sm"
                 leftIcon={<Plus className="h-3.5 w-3.5" />}
+                disabled={!canManage}
                 onClick={() => {
                   setAddNumberFor(config.id);
                   setNewPhoneAsDefault(config.numbers.length === 0);
@@ -435,7 +476,14 @@ export function VapiConfigSection() {
 
         {configs.length > 0 && (
           <div className="pt-4 border-t border-surface-200 dark:border-surface-700">
-            <Button type="button" variant="ghost" size="sm" className="text-danger-600 dark:text-danger-400" onClick={removeAllVapi}>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="text-danger-600 dark:text-danger-400"
+              disabled={!canManage}
+              onClick={removeAllVapi}
+            >
               Remove all Vapi integrations
             </Button>
           </div>

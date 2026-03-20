@@ -1,8 +1,16 @@
 import prisma from "./prisma.js";
+import { getMembershipForUser } from "./org.js";
+
+async function getOrganizationIdForUser(userId) {
+  const m = await getMembershipForUser(userId);
+  return m?.organizationId ?? null;
+}
 
 export async function userHasOutboundLine(userId) {
+  const orgId = await getOrganizationIdForUser(userId);
+  if (!orgId) return false;
   const n = await prisma.vapiPhoneNumber.count({
-    where: { config: { userId } },
+    where: { config: { organizationId: orgId } },
   });
   return n > 0;
 }
@@ -12,8 +20,11 @@ export async function userHasOutboundLine(userId) {
  * @returns {Promise<{ lineId: string, vapiPhoneNumberId: string, apiKey: string } | null>}
  */
 export async function getDefaultOutboundLine(userId) {
+  const orgId = await getOrganizationIdForUser(userId);
+  if (!orgId) return null;
+
   const defaultConfig = await prisma.vapiConfig.findFirst({
-    where: { userId, isDefault: true },
+    where: { organizationId: orgId, isDefault: true },
     include: {
       numbers: { orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }] },
     },
@@ -35,7 +46,7 @@ export async function getDefaultOutboundLine(userId) {
   }
 
   const anyConfig = await prisma.vapiConfig.findFirst({
-    where: { userId },
+    where: { organizationId: orgId },
     include: {
       numbers: { orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }] },
     },
@@ -45,13 +56,16 @@ export async function getDefaultOutboundLine(userId) {
 }
 
 /**
- * For scheduled dial: use reminder's line, or fall back to the user's default line if missing/stale.
+ * For scheduled dial: use reminder's line, or fall back to org default line if missing/stale.
  * @returns {Promise<{ lineId: string, vapiPhoneNumberId: string, apiKey: string } | null>}
  */
 export async function resolveLineForDial(userId, vapiLineId) {
+  const orgId = await getOrganizationIdForUser(userId);
+  if (!orgId) return null;
+
   if (vapiLineId?.trim()) {
     const line = await prisma.vapiPhoneNumber.findFirst({
-      where: { id: vapiLineId.trim(), config: { userId } },
+      where: { id: vapiLineId.trim(), config: { organizationId: orgId } },
       include: { config: true },
     });
     if (line) {
@@ -66,11 +80,19 @@ export async function resolveLineForDial(userId, vapiLineId) {
 }
 
 /**
- * Verify vapi_line_id belongs to user; if null/omit and user has lines, use default.
+ * Verify vapi_line_id belongs to user's org; if null/omit and org has lines, use default.
  * @returns {{ ok: true, vapiLineId: string | null } | { ok: false, detail: string }}
  */
 export async function assertOrResolveVapiLine(userId, vapiLineId) {
-  const hasLines = (await prisma.vapiPhoneNumber.count({ where: { config: { userId } } })) > 0;
+  const orgId = await getOrganizationIdForUser(userId);
+  if (!orgId) {
+    return { ok: true, vapiLineId: null };
+  }
+
+  const hasLines =
+    (await prisma.vapiPhoneNumber.count({
+      where: { config: { organizationId: orgId } },
+    })) > 0;
   if (!hasLines) {
     return { ok: true, vapiLineId: null };
   }
@@ -82,7 +104,7 @@ export async function assertOrResolveVapiLine(userId, vapiLineId) {
     return { ok: true, vapiLineId: d.lineId };
   }
   const line = await prisma.vapiPhoneNumber.findFirst({
-    where: { id: vapiLineId.trim(), config: { userId } },
+    where: { id: vapiLineId.trim(), config: { organizationId: orgId } },
   });
   if (!line) {
     return {
@@ -93,9 +115,9 @@ export async function assertOrResolveVapiLine(userId, vapiLineId) {
   return { ok: true, vapiLineId: line.id };
 }
 
-export async function unsetOtherDefaultConfigs(tx, userId, keepConfigId) {
+export async function unsetOtherDefaultConfigs(tx, organizationId, keepConfigId) {
   await tx.vapiConfig.updateMany({
-    where: { userId, id: { not: keepConfigId }, isDefault: true },
+    where: { organizationId, id: { not: keepConfigId }, isDefault: true },
     data: { isDefault: false },
   });
 }

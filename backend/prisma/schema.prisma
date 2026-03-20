@@ -21,8 +21,6 @@ model User {
   accounts            Account[]
   reminders           Reminder[]
   reminderExecutions  ReminderExecution[]
-  reminderTemplates   ReminderTemplate[]
-  vapiConfigs         VapiConfig[]
   memberships         Member[]
   teamMemberships     TeamMember[]
   invitationsSent     Invitation[]       @relation("InvitationInviter")
@@ -76,6 +74,8 @@ model Organization {
   teams       Team[]
   invitations Invitation[]
   promptProfile PromptProfile?
+  vapiConfigs VapiConfig[]
+  reminderTemplates ReminderTemplate[]
 
   @@map("organization")
 }
@@ -90,6 +90,7 @@ model Member {
   user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([organizationId, userId])
+  @@unique([userId])
   @@index([organizationId])
   @@index([userId])
   @@map("member")
@@ -143,19 +144,19 @@ model Invitation {
   @@map("invitation")
 }
 
-/// Named Vapi account: one API key, many outbound numbers (each validated).
+/// Named Vapi account: one API key, many outbound numbers (each validated). Org-scoped (shared by all members).
 model VapiConfig {
-  id         String            @id @default(cuid())
-  userId     String            @map("user_id")
-  name       String            @db.VarChar(100)
-  vapiApiKey String            @map("vapi_api_key") @db.Text
-  isDefault  Boolean           @default(false) @map("is_default")
-  createdAt  DateTime          @default(now()) @map("created_at")
-  updatedAt  DateTime          @updatedAt @map("updated_at")
-  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  numbers    VapiPhoneNumber[]
+  id             String         @id @default(cuid())
+  organizationId String         @map("organization_id")
+  name           String         @db.VarChar(100)
+  vapiApiKey     String         @map("vapi_api_key") @db.Text
+  isDefault      Boolean        @default(false) @map("is_default")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  numbers        VapiPhoneNumber[]
 
-  @@index([userId])
+  @@index([organizationId])
   @@map("vapi_configs")
 }
 
@@ -217,12 +218,14 @@ model ReminderExecution {
 }
 
 model ReminderTemplate {
-  id         Int      @id @default(autoincrement())
-  userId     String
-  title      String   @db.VarChar(255)
-  message    String   @db.VarChar(1000)
-  created_at DateTime @default(now())
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id             Int          @id @default(autoincrement())
+  organizationId String
+  title          String       @db.VarChar(255)
+  message        String       @db.VarChar(1000)
+  created_at     DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
   @@map("reminder_templates")
 }
 

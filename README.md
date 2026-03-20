@@ -2,7 +2,7 @@
 
 Voice call reminders powered by AI. Users schedule reminders and receive a phone call at the right time—no more silent notifications.
 
-**Stack:** Next.js 16, Express, Prisma, PostgreSQL, Better Auth, Vapi AI
+**Stack:** Next.js 16, Express, Prisma, PostgreSQL, Better Auth (email/password, orgs, email flows), Vapi AI, optional Resend for email delivery
 
 ---
 
@@ -23,7 +23,7 @@ cd callMeReminder
 # Backend
 cd backend && npm install
 cp .example.env .env
-# Edit .env with your values (see Environment Variables below)
+# Edit .env (see Environment Variables below)
 
 # Frontend
 cd ../frontend && npm install
@@ -60,22 +60,26 @@ cd frontend && npm run dev
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `BETTER_AUTH_SECRET` | Yes | Auth secret. Generate: `openssl rand -base64 32` |
-| `BETTER_AUTH_URL` | Yes | Backend URL. Local: `http://localhost:8000` |
+| `BETTER_AUTH_URL` | Yes | Public URL of **this API** (e.g. `http://localhost:8000` or `https://api.yourapp.com`) |
 | `DATABASE_URL` | Yes | PostgreSQL connection string |
-| `CORS_ORIGINS` | No | Comma-separated frontend URLs. Default includes localhost |
-| `BETTER_AUTH_API_KEY` | No | For [Better Auth Dashboard](https://dash.better-auth.com) (activity tracking) |
+| `CORS_ORIGINS` | No | Comma-separated frontend origins. Production must include your app URL |
+| `FRONTEND_URL` | **Prod** | Public URL of the Next.js app (e.g. `https://yourapp.vercel.app`). Used for invitation links, verification email links, and email HTML |
+| `BETTER_AUTH_API_KEY` | No | [Better Auth Dashboard](https://dash.better-auth.com) (activity tracking) |
 | `PORT` | No | Default: 8000 |
-| `API_PUBLIC_URL` | No | Backend URL reachable by Vapi (e.g. `https://api.yourapp.com`). Required for voice actions (snooze/dismiss by speaking during call). For local dev, use [ngrok](https://ngrok.com). |
-| `VOICE_ACTION_SECRET` | No | Secret for signing voice action tokens. Generate: `openssl rand -base64 32`. Required when using voice actions. |
+| `RESEND_API_KEY` | No | [Resend](https://resend.com) API key. Without it, auth emails are skipped (logged in dev) |
+| `EMAIL_FROM` | No | Sender, e.g. `Dialcues <noreply@yourdomain.com>` (domain must be verified in Resend) |
+| `OPENROUTER_API_KEY` | No | For AI-generated company prompts in Settings (optional; fallback template if unset) |
+| `API_PUBLIC_URL` | No | Backend URL reachable by Vapi. Required for voice actions (snooze/dismiss). Local: [ngrok](https://ngrok.com) |
+| `VOICE_ACTION_SECRET` | No | Secret for signing voice action tokens |
 
-**Note:** Vapi API keys are stored per-user in the database. Users add them in Settings after signup. No backend env vars for Vapi.
+**Note:** Vapi API keys are stored per user in the database (Settings → Vapi). No global Vapi env vars are required on the server.
 
 ### Frontend (`frontend/.env.local`)
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `NEXT_PUBLIC_API_URL` | Yes | Backend URL. Local: `http://localhost:8000` |
-| `NEXT_PUBLIC_SITE_URL` | No | For SEO/sitemap. Default: `https://dialcues.com` |
+| `NEXT_PUBLIC_API_URL` | Yes | Backend URL (e.g. `http://localhost:8000`) |
+| `NEXT_PUBLIC_SITE_URL` | **Prod** | Public site origin (e.g. `https://yourapp.vercel.app`). Used for absolute redirects, password-reset `redirectTo`, signup/login callbacks, and SEO defaults. Should match `FRONTEND_URL` |
 
 ---
 
@@ -84,29 +88,23 @@ cd frontend && npm run dev
 ```
 callMeReminder/
 ├── frontend/                 # Next.js 16 (App Router)
-│   ├── src/
-│   │   ├── app/              # Routes: /, /dashboard, /login, /signup, /settings, /docs/vapi
-│   │   ├── components/
-│   │   │   ├── ui/           # Button, Input, Card, Modal, etc.
-│   │   │   ├── reminder/     # ReminderForm, ReminderList, ReminderCard
-│   │   │   ├── dashboard/    # FilterTabs, SearchInput, StatsCards
-│   │   │   └── layout/       # Header (with mobile menu)
-│   │   ├── lib/              # api.ts, auth-client.ts, utils.ts, theme-provider
-│   │   └── types/
+│   ├── src/app/              # /, /dashboard, /history, /login, /signup, /settings,
+│   │                         # /onboarding/organization, /forgot-password, /reset-password,
+│   │                         # /verify-email, /accept-invitation/[id], /docs/vapi, …
+│   ├── src/components/       # ui, reminder, dashboard, layout, settings (Vapi, org, prompts, templates)
+│   ├── src/lib/              # api.ts, auth-client.ts, site-url.ts, utils.ts, …
 │   └── .example.env
 │
 ├── backend/
-│   ├── index.js              # Express server, CORS, Better Auth mount
-│   ├── auth.js               # Better Auth config (email/password, dash plugin)
-│   ├── prisma/
-│   │   └── schema.prisma     # User, Session, Reminder, VapiConfig, VapiPhoneNumber
-│   ├── routes/               # /api/reminders, /api/stats, /api/settings
-│   ├── services/
-│   │   ├── scheduler.js     # 15s interval, processes due reminders
-│   │   └── vapi.js           # Vapi API client, initiates calls
-│   ├── middleware/           # Auth middleware for protected routes
+│   ├── index.js              # Express, CORS, Better Auth at /api/auth/*
+│   ├── auth.js               # Better Auth: email/password, verification, reset, org plugin, Resend
+│   ├── prisma/schema.prisma  # User, Session, Organization, Member, Invitation, Reminder, VapiConfig, PromptProfile, …
+│   ├── routes/               # reminders, stats, settings, vapi-configs, templates, …
+│   ├── services/             # scheduler, vapi, prompt-generator, email (Resend)
+│   ├── middleware/           # requireAuth, requireOrg, requireOrgRole
 │   └── .example.env
 │
+├── ROADMAP.md
 └── README.md
 ```
 
@@ -114,54 +112,49 @@ callMeReminder/
 
 ## Key Concepts
 
+### Organizations (SaaS)
+
+- Each user belongs to **at most one** organization (`member.userId` is unique).
+- Users complete **organization onboarding** (`/onboarding/organization`): create an org or accept an invitation.
+- **Organization context** comes from the user’s membership row in the database, not from switching “active” orgs in the session.
+- Shared **prompt profiles**, **Vapi configs**, and **reminder templates** are scoped to that organization.
+- Roles: **owner**, **admin**, **member** (invite UI uses admin/member; owner is typically the creator).
+
 ### Scheduling
 
-- A **scheduler** runs every 15 seconds (`services/scheduler.js`)
-- Queries reminders where `status = 'scheduled'` and `scheduled_at <= now`
-- For each due reminder: sets `in_progress` → calls Vapi → sets `completed` or `failed`
-- Timezone: reminders store `scheduled_at` in UTC; frontend uses user's timezone for display
+- Scheduler runs every ~15 seconds (`services/scheduler.js`).
+- Picks due reminders, calls Vapi, updates status; supports retries for failed calls.
 
 ### Auth
 
-- **Better Auth** with email/password
-- Session-based (cookies)
-- Protected routes: `/api/reminders`, `/api/stats`, `/api/settings` require auth
-- `AuthGuard` component redirects unauthenticated users to `/login`
+- **Better Auth:** email/password, optional email verification and password reset (when `RESEND_API_KEY` is set).
+- Session cookies; API routes use `requireAuth`. Org-scoped mutations use **`requireOrg`** (membership lookup) and often **`requireOrgRole("owner", "admin")`** (see `middleware/auth.js`).
+- Frontend: `AuthGuard` redirects unauthenticated users to `/login`; users without an organization membership are sent to `/onboarding/organization`.
 
 ### Vapi
 
-- Each user adds **Vapi** lines in Settings (API key per config, one or more phone number IDs)
-- Stored in `vapi_configs` / `vapi_phone_numbers` (API key masked in API responses)
-- When a reminder is due, backend fetches the user's Vapi credentials and initiates the call
-- Voice message: *"Hello! This is Dialcues. Your reminder: [title]. [message]. Goodbye!"*
+- **Vapi configs and phone numbers** live under the organization (Settings); owners/admins edit, members typically view.
+- Outbound calls use the **organization’s** Vapi keys/lines (resolved via the user’s membership). Optional **company prompt** is per organization (custom or AI-generated).
 
-### Voice Actions (optional)
+### Voice actions (optional)
 
-When `API_PUBLIC_URL` and `VOICE_ACTION_SECRET` are set, users can speak during the call to:
-- **Snooze** — e.g. "snooze for 10 minutes", "remind me in an hour", "tomorrow"
-- **Dismiss** — e.g. "dismiss", "I'm done"
-- **Repeat** — "repeat" (assistant repeats the message)
-
-The assistant asks after delivering the reminder. For local dev, expose your backend with [ngrok](https://ngrok.com) and set `API_PUBLIC_URL` to the ngrok URL.
+With `API_PUBLIC_URL` and `VOICE_ACTION_SECRET`, callers can snooze/dismiss/repeat via voice. See in-app docs.
 
 ---
 
-## API Reference
+## API Reference (summary)
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/api/reminders` | Yes | List reminders. Query: `status`, `search`, `page`, `page_size` |
-| POST | `/api/reminders` | Yes | Create reminder |
-| POST | `/api/reminders/voice-action` | No | Voice actions (snooze/dismiss during call) — uses signed token |
-| GET | `/api/reminders/:id` | Yes | Get reminder |
-| PUT | `/api/reminders/:id` | Yes | Update reminder |
-| DELETE | `/api/reminders/:id` | Yes | Delete reminder |
-| GET | `/api/stats` | Yes | Reminder counts by status |
-| GET | `/api/settings` | Yes | User's Vapi config (masked) |
-| PUT | `/api/settings` | Yes | Update Vapi config |
-| POST | `/api/settings/test` | Yes | Test Vapi credentials |
+Better Auth exposes **`/api/auth/*`** (session, sign-in, sign-up, organizations, invitations, etc.).
 
-Auth routes: `POST /api/auth/*` (handled by Better Auth)
+REST examples (all cookie-authenticated unless noted):
+
+| Area | Examples |
+|------|----------|
+| Reminders | `GET/POST /api/reminders`, `GET /api/reminders/executions`, … |
+| Stats | `GET /api/stats`, `GET /api/stats/ops` (scheduler status) |
+| Settings | `GET /api/settings`, `PUT /api/settings/prompt`, `POST /api/settings/prompt/generate` |
+| Vapi configs | `GET/POST /api/vapi-configs`, … |
+| Templates | `GET/POST/DELETE /api/templates` |
 
 ---
 
@@ -169,21 +162,21 @@ Auth routes: `POST /api/auth/*` (handled by Better Auth)
 
 | Command | Where | Description |
 |---------|-------|-------------|
-| `npm run dev` | backend | Start API with hot reload |
-| `npm run dev` | frontend | Start Next.js dev server |
+| `npm run dev` | backend | API with watch mode |
+| `npm run dev` | frontend | Next.js dev server |
 | `npm run build` | frontend | Production build |
-| `npx prisma db push` | backend | Sync schema to DB (no migrations) |
-| `npx prisma studio` | backend | Open Prisma Studio (DB GUI) |
+| `npx prisma db push` | backend | Sync schema to DB |
+| `npx prisma studio` | backend | Prisma Studio |
 
 ---
 
 ## Testing the Call Flow
 
-1. Start backend and frontend
-2. Sign up or log in
-3. Go to **Settings** → add your Vapi API key and Phone Number ID (see in-app guide)
-4. Create a reminder: set time 2–3 minutes in the future, use your real phone number (E.164)
-5. Wait for the call—status will change from Scheduled → In Progress → Completed
+1. Start backend and frontend; configure `.env` / `.env.local`.
+2. Sign up → complete **organization** setup if prompted.
+3. **Settings** → add Vapi integration and a phone number (see in-app guide).
+4. Create a reminder a few minutes ahead with your phone in E.164 format.
+5. Watch status: scheduled → in progress → completed.
 
 ---
 
@@ -191,20 +184,21 @@ Auth routes: `POST /api/auth/*` (handled by Better Auth)
 
 | Issue | Check |
 |-------|-------|
-| Call not triggering | Backend logs for scheduler; reminder time in future (UTC); user has Vapi keys in Settings |
-| Frontend can't reach backend | `NEXT_PUBLIC_API_URL` correct; backend on 8000; CORS includes frontend URL |
-| Login/signup fails | `BETTER_AUTH_SECRET` set; `BETTER_AUTH_URL` matches backend URL; DB connected |
-| Vapi call fails | Vapi dashboard logs; correct Phone Number ID; account has credits |
-| Build errors | `npm install` in both folders; Node 20+ |
+| Call not triggering | Scheduler logs; reminder time (UTC); Vapi keys and numbers in Settings |
+| Frontend ↔ API | `NEXT_PUBLIC_API_URL`; `CORS_ORIGINS` includes frontend origin |
+| Auth / cookies | `BETTER_AUTH_URL` is the API’s public URL; `BETTER_AUTH_SECRET`; HTTPS + `SameSite` in production |
+| Emails not sending | `RESEND_API_KEY`, `EMAIL_FROM`, verified domain in Resend; `FRONTEND_URL` on API for links |
+| Verification / reset links wrong | `FRONTEND_URL` (backend) and `NEXT_PUBLIC_SITE_URL` (frontend) match your live app URL |
+| Org onboarding loop | Ensure `member` row exists (create org or accept invite); no separate “set active org” step required for our API |
+| Vapi errors | Vapi dashboard; phone number ID; credits |
 
 ---
 
 ## Deployment
 
-- **Frontend:** Vercel (connect repo, set `NEXT_PUBLIC_API_URL` to backend URL)
-- **Backend:** Render, Railway, or similar (Node, set env vars, `npm start`)
-- **Database:** Render PostgreSQL, Neon, or Supabase
-- Ensure `CORS_ORIGINS` includes your production frontend URL
+- **Frontend:** Vercel — set `NEXT_PUBLIC_API_URL` and **`NEXT_PUBLIC_SITE_URL`** to the deployed frontend origin.
+- **Backend:** Render / Railway / etc. — set **`BETTER_AUTH_URL`** to this service’s public URL, **`FRONTEND_URL`** to the Next.js URL, **`CORS_ORIGINS`** to the frontend origin, and email vars if using Resend.
+- **Database:** Neon, Render Postgres, Supabase, etc.
 
 ---
 
@@ -212,4 +206,4 @@ Auth routes: `POST /api/auth/*` (handled by Better Auth)
 
 - **Colors:** Primary `#2563eb`, Secondary `#06b6d4`, Accent `#22c55e`, Dark `#0f172a`, Light `#f8fafc`
 - **Fonts:** Outfit (body), Space Grotesk (headings), JetBrains Mono (code)
-- **Components:** See `frontend/src/components/ui/` for Button, Input, Card, Modal, etc.
+- **Components:** `frontend/src/components/ui/`

@@ -27,7 +27,7 @@ export function AuthGuard({ children, requireOrg = true }: AuthGuardProps) {
       router.push("/login");
       return;
     }
-    if (requireOrg && !settingsLoading && settings && !settings.activeOrganizationId) {
+    if (requireOrg && !settingsLoading && settings && !settings.organizationId) {
       router.push("/onboarding/organization");
     }
   }, [session, isPending, requireOrg, settings, settingsLoading, router]);
@@ -42,7 +42,7 @@ export function AuthGuard({ children, requireOrg = true }: AuthGuardProps) {
 
   if (!session) return null;
 
-  if (requireOrg && (settingsLoading || !settings?.activeOrganizationId)) {
+  if (requireOrg && (settingsLoading || !settings?.organizationId)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-pulse text-surface-500">Loading...</div>

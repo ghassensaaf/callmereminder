@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -11,19 +11,8 @@ import Image from "next/image";
 
 import { AuthGuard } from "@/components/auth-guard";
 import { Button, Card, Input, Badge } from "@/components/ui";
-import { organizationApi } from "@/lib/api";
-import { signOut } from "@/lib/auth-client";
-
-function extractOrgId(created: unknown): string | null {
-  if (!created || typeof created !== "object") return null;
-  const o = created as Record<string, unknown>;
-  if (typeof o.id === "string") return o.id;
-  const inner = o.organization ?? o.data;
-  if (inner && typeof inner === "object" && typeof (inner as Record<string, unknown>).id === "string") {
-    return (inner as { id: string }).id;
-  }
-  return null;
-}
+import { organizationApi, settingsApi } from "@/lib/api";
+import { signOut, useSession } from "@/lib/auth-client";
 
 function slugify(input: string) {
   return input
@@ -37,6 +26,7 @@ function slugify(input: string) {
 export default function OrganizationOnboardingPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
   const [orgName, setOrgName] = useState("");
   const [orgSlug, setOrgSlug] = useState("");
   const [isCreating, setIsCreating] = useState(false);
@@ -45,6 +35,18 @@ export default function OrganizationOnboardingPage() {
     () => (orgSlug.trim() ? slugify(orgSlug) : slugify(orgName)),
     [orgName, orgSlug]
   );
+
+  const { data: settings } = useQuery({
+    queryKey: ["settings"],
+    queryFn: () => settingsApi.get(),
+    enabled: !!session,
+  });
+
+  useEffect(() => {
+    if (settings?.organizationId) {
+      router.replace("/dashboard");
+    }
+  }, [settings?.organizationId, router]);
 
   const { data: invitations } = useQuery({
     queryKey: ["my-invitations"],
@@ -64,17 +66,8 @@ export default function OrganizationOnboardingPage() {
     }
     setIsCreating(true);
     try {
-      const created = await organizationApi.create({ name: orgName.trim(), slug: effectiveSlug });
-      let orgId = extractOrgId(created);
-      if (!orgId) {
-        const list = await organizationApi.list();
-        orgId = list[list.length - 1]?.id ?? null;
-      }
-      if (orgId) {
-        await organizationApi.setActive(orgId);
-      }
+      await organizationApi.create({ name: orgName.trim(), slug: effectiveSlug });
       await queryClient.refetchQueries({ queryKey: ["settings"] });
-      await queryClient.refetchQueries({ queryKey: ["organizations"] });
       toast.success("Organization created");
       router.replace("/dashboard");
     } catch (err: any) {
@@ -88,13 +81,8 @@ export default function OrganizationOnboardingPage() {
 
   async function handleAccept(invitationId: string) {
     try {
-      const invite = pendingInvitations.find((i) => i.id === invitationId);
       await organizationApi.acceptInvitation(invitationId);
-      if (invite?.organizationId) {
-        await organizationApi.setActive(invite.organizationId);
-      }
       await queryClient.refetchQueries({ queryKey: ["settings"] });
-      await queryClient.refetchQueries({ queryKey: ["organizations"] });
       await queryClient.invalidateQueries({ queryKey: ["my-invitations"] });
       toast.success("Invitation accepted — welcome to the team!");
       router.replace("/dashboard");

@@ -14,31 +14,47 @@ export async function requireAuth(req, res, next) {
   next();
 }
 
-export function requireOrg(req, res, next) {
-  const orgId = req.session?.session?.activeOrganizationId;
-  if (!orgId) {
-    return res.status(400).json({ detail: "No active organization. Complete onboarding first." });
+/**
+ * Resolves the user's single organization from membership (not session "active org").
+ * Sets req.organizationId, req.activeOrganizationId (alias), and req.orgMembership.
+ */
+export async function requireOrg(req, res, next) {
+  try {
+    const membership = await prisma.member.findUnique({
+      where: { userId: req.user.id },
+      include: { organization: true },
+    });
+    if (!membership) {
+      return res.status(400).json({ detail: "No organization. Complete onboarding first." });
+    }
+    req.organizationId = membership.organizationId;
+    req.activeOrganizationId = membership.organizationId;
+    req.orgMembership = membership;
+    next();
+  } catch (err) {
+    next(err);
   }
-  req.activeOrganizationId = orgId;
-  next();
 }
 
 export function requireOrgRole(...allowedRoles) {
   return async (req, res, next) => {
-    const orgId = req.activeOrganizationId;
-    if (!orgId) {
-      return res.status(400).json({ detail: "No active organization." });
+    try {
+      let membership = req.orgMembership;
+      if (!membership || membership.userId !== req.user.id) {
+        membership = await prisma.member.findUnique({ where: { userId: req.user.id } });
+      }
+      if (!membership) {
+        return res.status(403).json({ detail: "You are not a member of an organization." });
+      }
+      if (allowedRoles.length > 0 && !allowedRoles.includes(membership.role)) {
+        return res.status(403).json({ detail: "You do not have permission for this action." });
+      }
+      req.orgMembership = membership;
+      if (!req.organizationId) req.organizationId = membership.organizationId;
+      if (!req.activeOrganizationId) req.activeOrganizationId = membership.organizationId;
+      next();
+    } catch (err) {
+      next(err);
     }
-    const membership = await prisma.member.findFirst({
-      where: { userId: req.user.id, organizationId: orgId },
-    });
-    if (!membership) {
-      return res.status(403).json({ detail: "You are not a member of this organization." });
-    }
-    if (allowedRoles.length > 0 && !allowedRoles.includes(membership.role)) {
-      return res.status(403).json({ detail: "You do not have permission for this action." });
-    }
-    req.orgMembership = membership;
-    next();
   };
 }

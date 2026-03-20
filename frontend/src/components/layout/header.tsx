@@ -4,35 +4,25 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Settings, LogOut, Menu, X, Building2, ChevronDown, Check } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Settings, LogOut, Menu, X, Building2 } from "lucide-react";
 
 import { Button, ThemeToggle } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { useSession, signOut } from "@/lib/auth-client";
-import { organizationApi, settingsApi } from "@/lib/api";
+import { settingsApi } from "@/lib/api";
 
 export function Header() {
   const { data: session, isPending } = useSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [orgSwitcherOpen, setOrgSwitcherOpen] = useState(false);
   const pathname = usePathname();
   const isSettingsPage = pathname.startsWith("/settings");
-  const queryClient = useQueryClient();
 
   const { data: settings } = useQuery({
     queryKey: ["settings"],
     queryFn: () => settingsApi.get(),
     enabled: !!session,
   });
-
-  const { data: orgs } = useQuery({
-    queryKey: ["organizations"],
-    queryFn: () => organizationApi.list(),
-    enabled: !!session,
-  });
-
-  const activeOrg = (orgs ?? []).find((o) => o.id === settings?.activeOrganizationId);
 
   useEffect(() => {
     if (mobileMenuOpen) {
@@ -45,13 +35,6 @@ export function Header() {
     };
   }, [mobileMenuOpen]);
 
-  useEffect(() => {
-    if (!orgSwitcherOpen) return;
-    const close = () => setOrgSwitcherOpen(false);
-    document.addEventListener("click", close);
-    return () => document.removeEventListener("click", close);
-  }, [orgSwitcherOpen]);
-
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
   const handleSignOut = () => {
@@ -61,17 +44,6 @@ export function Header() {
       },
     });
   };
-
-  async function switchOrg(orgId: string) {
-    setOrgSwitcherOpen(false);
-    try {
-      await organizationApi.setActive(orgId);
-      await queryClient.invalidateQueries({ queryKey: ["settings"] });
-      await queryClient.invalidateQueries({ queryKey: ["active-organization"] });
-    } catch {
-      // silently fail
-    }
-  }
 
   return (
     <header className="sticky top-0 z-40 w-full">
@@ -99,53 +71,13 @@ export function Header() {
               </span>
             </Link>
 
-            {/* Org switcher (desktop) */}
-            {session && activeOrg && (orgs ?? []).length > 0 && (
-              <div className="relative hidden md:block">
-                <span className="text-surface-300 dark:text-surface-600 mx-1">/</span>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setOrgSwitcherOpen(!orgSwitcherOpen);
-                  }}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium text-surface-700 dark:text-surface-200 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
-                >
-                  <Building2 className="h-3.5 w-3.5 text-surface-400" />
-                  <span className="max-w-[160px] truncate">{activeOrg.name}</span>
-                  {(orgs ?? []).length > 1 && <ChevronDown className="h-3.5 w-3.5 text-surface-400" />}
-                </button>
-
-                {orgSwitcherOpen && (orgs ?? []).length > 1 && (
-                  <div
-                    className="absolute left-0 top-full mt-1 w-64 rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 shadow-lg py-1 z-50"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <p className="px-3 py-2 text-xs font-medium text-surface-500 dark:text-surface-400 uppercase tracking-wider">
-                      Switch organization
-                    </p>
-                    {(orgs ?? []).map((org) => {
-                      const isActive = org.id === settings?.activeOrganizationId;
-                      return (
-                        <button
-                          key={org.id}
-                          type="button"
-                          onClick={() => switchOrg(org.id)}
-                          className={cn(
-                            "w-full flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors",
-                            isActive
-                              ? "bg-primary-50 dark:bg-primary-950/30 text-primary-700 dark:text-primary-300"
-                              : "text-surface-700 dark:text-surface-200 hover:bg-surface-50 dark:hover:bg-surface-800"
-                          )}
-                        >
-                          <Building2 className="h-4 w-4 shrink-0" />
-                          <span className="truncate">{org.name}</span>
-                          {isActive && <Check className="h-4 w-4 ml-auto shrink-0 text-primary-600 dark:text-primary-400" />}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
+            {session && settings?.organizationName && (
+              <div className="hidden md:flex items-center gap-1.5 min-w-0">
+                <span className="text-surface-300 dark:text-surface-600 mx-0.5">/</span>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium text-surface-700 dark:text-surface-200">
+                  <Building2 className="h-3.5 w-3.5 text-surface-400 shrink-0" />
+                  <span className="max-w-[200px] truncate">{settings.organizationName}</span>
+                </span>
               </div>
             )}
           </div>
@@ -227,37 +159,15 @@ export function Header() {
         <nav className="flex flex-col p-4 gap-1 border-t border-surface-200 dark:border-surface-800 overflow-y-auto">
           {session ? (
             <>
-              {/* Mobile org switcher */}
-              {activeOrg && (
+              {settings?.organizationName && (
                 <div className="px-4 py-3 mb-2 rounded-xl bg-surface-50 dark:bg-surface-900/40 border border-surface-200 dark:border-surface-700">
-                  <p className="text-xs font-medium text-surface-500 dark:text-surface-400 uppercase tracking-wider mb-2">
+                  <p className="text-xs font-medium text-surface-500 dark:text-surface-400 uppercase tracking-wider mb-1">
                     Organization
                   </p>
-                  <div className="space-y-1">
-                    {(orgs ?? []).map((org) => {
-                      const isActive = org.id === settings?.activeOrganizationId;
-                      return (
-                        <button
-                          key={org.id}
-                          type="button"
-                          onClick={() => {
-                            switchOrg(org.id);
-                            closeMobileMenu();
-                          }}
-                          className={cn(
-                            "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-left",
-                            isActive
-                              ? "bg-primary-50 dark:bg-primary-950/30 text-primary-700 dark:text-primary-300 font-medium"
-                              : "text-surface-700 dark:text-surface-200"
-                          )}
-                        >
-                          <Building2 className="h-4 w-4 shrink-0" />
-                          <span className="truncate">{org.name}</span>
-                          {isActive && <Check className="h-3.5 w-3.5 ml-auto shrink-0" />}
-                        </button>
-                      );
-                    })}
-                  </div>
+                  <p className="text-sm font-medium text-surface-900 dark:text-surface-100 flex items-center gap-2">
+                    <Building2 className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{settings.organizationName}</span>
+                  </p>
                 </div>
               )}
 

@@ -160,7 +160,10 @@ export const settingsApi = {
     vapiApiKeyDisplay: string | null;
     vapiPhoneNumberId: string | null;
     hasVapiKeys: boolean;
-    activeOrganizationId: string | null;
+    organizationId: string | null;
+    organizationName: string | null;
+    organizationSlug: string | null;
+    organizationRole: "owner" | "admin" | "member" | null;
     promptProfile: {
       mode: "default" | "custom" | "generated";
       customPrompt: string;
@@ -238,28 +241,14 @@ export const organizationApi = {
     });
     return response.data as { id: string; organizationId: string; email: string; role: string; status: string };
   },
-  list: async () => {
-    const response = await api.get("/api/auth/organization/list");
-    return response.data as Array<{
-      id: string;
-      name: string;
-      slug: string;
-      logo?: string | null;
-      createdAt: string;
-    }>;
-  },
   create: async (data: { name: string; slug: string }) => {
     const response = await api.post("/api/auth/organization/create", data);
     return response.data;
   },
-  setActive: async (organizationId: string) => {
-    const response = await api.post("/api/auth/organization/set-active", {
-      organizationId,
+  getFull: async (organizationId: string) => {
+    const response = await api.get("/api/auth/organization/get-full-organization", {
+      params: { organizationId },
     });
-    return response.data;
-  },
-  getFull: async () => {
-    const response = await api.get("/api/auth/organization/get-full-organization");
     return response.data as {
       id: string;
       name: string;
@@ -280,7 +269,11 @@ export const organizationApi = {
       }>;
     };
   },
-  inviteMember: async (data: { email: string; role: "member" | "admin" | "owner"; organizationId?: string }) => {
+  inviteMember: async (data: {
+    email: string;
+    role: "member" | "admin" | "owner";
+    organizationId: string;
+  }) => {
     const response = await api.post("/api/auth/organization/invite-member", data);
     return response.data;
   },

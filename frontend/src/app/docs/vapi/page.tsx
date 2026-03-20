@@ -60,13 +60,13 @@ export default function VapiGuidePage() {
 
             <div>
               <h2 className="font-semibold text-surface-900 dark:text-surface-50 mb-2">
-                Multiple accounts & numbers
+                Multiple accounts & numbers (organization-wide)
               </h2>
               <p className="text-surface-600 dark:text-surface-300 text-sm leading-relaxed mb-4">
-                In Settings you can add several Vapi configurations (each with its own API key), attach
-                multiple validated phone numbers per key with nicknames, and set a default account plus a default
-                outgoing line per account. When creating a reminder, pick which line to call from—the default line
-                is selected automatically.
+                Vapi credentials are stored for your <strong>organization</strong>, not per user. In Settings, owners and
+                admins can add several configurations (each with its own API key), attach multiple validated phone
+                numbers per key with nicknames, and set a default account plus a default outgoing line per account.
+                When creating a reminder, pick which line to call from—the default line is selected automatically.
               </p>
             </div>
 

@@ -8,6 +8,8 @@
  *   node scripts/migrate-legacy-user-settings.mjs
  *
  * Then apply schema / `npx prisma db push` which drops `user_settings`.
+ *
+ * Vapi configs are org-scoped: uses the user's (single) organization membership.
  */
 import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
@@ -40,16 +42,22 @@ async function main() {
 
   for (const row of rows) {
     const userId = row.userId;
-    const existing = await prisma.vapiConfig.count({ where: { userId } });
+    const membership = await prisma.member.findUnique({ where: { userId } });
+    if (!membership) {
+      console.log(`Skip user ${userId}: no organization membership`);
+      continue;
+    }
+    const organizationId = membership.organizationId;
+    const existing = await prisma.vapiConfig.count({ where: { organizationId } });
     if (existing > 0) {
-      console.log(`Skip user ${userId}: already has vapi_configs`);
+      console.log(`Skip org ${organizationId}: already has vapi_configs`);
       continue;
     }
 
     await prisma.$transaction(async (tx) => {
       const config = await tx.vapiConfig.create({
         data: {
-          userId,
+          organizationId,
           name: "Default",
           vapiApiKey: String(row.vapiApiKey).trim(),
           isDefault: true,
@@ -68,7 +76,7 @@ async function main() {
         data: { vapiLineId: line.id },
       });
     });
-    console.log(`Migrated legacy Vapi for user ${userId}`);
+    console.log(`Migrated legacy Vapi for user ${userId} (org ${organizationId})`);
   }
 }
 

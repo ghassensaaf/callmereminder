@@ -5,6 +5,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { QueryProvider } from "@/lib/query-provider";
 import { ThemeProvider } from "@/lib/theme-provider";
+import { SessionOrganizationSync } from "@/components/session-organization-sync";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -113,6 +114,7 @@ export default function RootLayout({
       <body className="font-sans">
         <ThemeProvider>
           <QueryProvider>
+            <SessionOrganizationSync />
             {/* Background pattern - Light mode */}
             <div className="fixed inset-0 -z-10 dark:hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-primary-50/50 via-white to-surface-50" />

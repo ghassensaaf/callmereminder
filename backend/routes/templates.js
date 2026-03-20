@@ -1,13 +1,13 @@
 import { Router } from "express";
 import prisma from "../lib/prisma.js";
-import { requireAuth } from "../middleware/auth.js";
+import { requireAuth, requireOrg, requireOrgRole } from "../middleware/auth.js";
 
 const router = Router();
 
-router.get("/", requireAuth, async (req, res) => {
+router.get("/", requireAuth, requireOrg, async (req, res) => {
   try {
     const items = await prisma.reminderTemplate.findMany({
-      where: { userId: req.user.id },
+      where: { organizationId: req.organizationId },
       orderBy: { created_at: "desc" },
     });
     res.json(
@@ -24,7 +24,7 @@ router.get("/", requireAuth, async (req, res) => {
   }
 });
 
-router.post("/", requireAuth, async (req, res) => {
+router.post("/", requireAuth, requireOrg, requireOrgRole("owner", "admin"), async (req, res) => {
   try {
     const { title, message } = req.body;
     if (!title?.trim() || !message?.trim()) {
@@ -32,7 +32,7 @@ router.post("/", requireAuth, async (req, res) => {
     }
     const template = await prisma.reminderTemplate.create({
       data: {
-        userId: req.user.id,
+        organizationId: req.organizationId,
         title: title.trim(),
         message: message.trim(),
       },
@@ -49,12 +49,12 @@ router.post("/", requireAuth, async (req, res) => {
   }
 });
 
-router.delete("/:id", requireAuth, async (req, res) => {
+router.delete("/:id", requireAuth, requireOrg, requireOrgRole("owner", "admin"), async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     if (isNaN(id)) return res.status(400).json({ detail: "Invalid ID" });
     const template = await prisma.reminderTemplate.findFirst({
-      where: { id, userId: req.user.id },
+      where: { id, organizationId: req.organizationId },
     });
     if (!template) return res.status(404).json({ detail: "Template not found" });
     await prisma.reminderTemplate.delete({ where: { id } });
