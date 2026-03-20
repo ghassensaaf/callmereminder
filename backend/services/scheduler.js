@@ -27,7 +27,15 @@ async function processDueReminders() {
       include: {
         user: {
           include: {
-            promptProfile: true,
+            memberships: {
+              include: {
+                organization: {
+                  include: {
+                    promptProfile: true,
+                  },
+                },
+              },
+            },
           },
         },
       },
@@ -62,7 +70,8 @@ async function processDueReminders() {
         {
           reminderId: reminder.id,
           voiceActionToken,
-          companyPromptProfile: reminder.user?.promptProfile ?? null,
+          companyPromptProfile:
+            reminder.user?.memberships?.map((m) => m.organization?.promptProfile).find(Boolean) ?? null,
         }
       );
 

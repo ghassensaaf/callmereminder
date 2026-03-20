@@ -1,5 +1,6 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
+import { organization } from "better-auth/plugins";
 import prisma from "./lib/prisma.js";
 import { dash } from "@better-auth/infra";
 const corsOrigins = (process.env.CORS_ORIGINS || "http://localhost:3000")
@@ -17,6 +18,11 @@ export const auth = betterAuth({
     enabled: true,
   },
   plugins: [
+    organization({
+      teams: {
+        enabled: true,
+      },
+    }),
     ...(process.env.BETTER_AUTH_API_KEY
       ? [
           dash({

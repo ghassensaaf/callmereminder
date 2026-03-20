@@ -23,7 +23,9 @@ model User {
   reminderExecutions  ReminderExecution[]
   reminderTemplates   ReminderTemplate[]
   vapiConfigs         VapiConfig[]
-  promptProfile       PromptProfile?
+  memberships         Member[]
+  teamMemberships     TeamMember[]
+  invitationsSent     Invitation[]       @relation("InvitationInviter")
   @@unique([email])
   @@map("user")
 }
@@ -36,6 +38,8 @@ model Session {
   updatedAt DateTime  @updatedAt
   ipAddress String?
   userAgent String?
+  activeOrganizationId String?
+  activeTeamId String?
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@unique([token])
@@ -58,6 +62,85 @@ model Account {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
   @@map("account")
+}
+
+model Organization {
+  id          String        @id @default(cuid())
+  name        String
+  slug        String        @unique
+  logo        String?
+  metadata    Json?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime?     @updatedAt
+  members     Member[]
+  teams       Team[]
+  invitations Invitation[]
+  promptProfile PromptProfile?
+
+  @@map("organization")
+}
+
+model Member {
+  id             String       @id @default(cuid())
+  organizationId String
+  userId         String
+  role           String       @default("member")
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([organizationId])
+  @@index([userId])
+  @@map("member")
+}
+
+model Team {
+  id             String       @id @default(cuid())
+  name           String
+  organizationId String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime?    @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  members        TeamMember[]
+  invitations    Invitation[]
+
+  @@index([organizationId])
+  @@map("team")
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  teamId    String
+  userId    String
+  createdAt DateTime @default(now())
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+  @@index([teamId])
+  @@index([userId])
+  @@map("teamMember")
+}
+
+model Invitation {
+  id             String       @id @default(cuid())
+  organizationId String
+  email          String
+  role           String
+  status         String       @default("pending")
+  expiresAt      DateTime
+  inviterId      String
+  teamId         String?
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  inviter        User         @relation("InvitationInviter", fields: [inviterId], references: [id], onDelete: Cascade)
+  team           Team?        @relation(fields: [teamId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([email])
+  @@index([inviterId])
+  @@map("invitation")
 }
 
 /// Named Vapi account: one API key, many outbound numbers (each validated).
@@ -145,7 +228,7 @@ model ReminderTemplate {
 
 model PromptProfile {
   id              String   @id @default(cuid())
-  userId          String   @unique
+  organizationId  String   @unique @map("organization_id")
   mode            String   @default("default") @db.VarChar(20) // default | custom | generated
   customPrompt    String?  @map("custom_prompt") @db.Text
   generatedPrompt String?  @map("generated_prompt") @db.Text
@@ -155,8 +238,8 @@ model PromptProfile {
   notes           String?  @db.Text
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  @@index([userId])
+  @@index([organizationId])
   @@map("prompt_profiles")
 }

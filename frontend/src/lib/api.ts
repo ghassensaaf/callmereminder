@@ -160,6 +160,7 @@ export const settingsApi = {
     vapiApiKeyDisplay: string | null;
     vapiPhoneNumberId: string | null;
     hasVapiKeys: boolean;
+    activeOrganizationId: string | null;
     promptProfile: {
       mode: "default" | "custom" | "generated";
       customPrompt: string;
@@ -227,6 +228,79 @@ export const settingsApi = {
       };
       provider: "openrouter" | "fallback-template";
     };
+  },
+};
+
+export const organizationApi = {
+  list: async () => {
+    const response = await api.get("/api/auth/organization/list");
+    return response.data as Array<{
+      id: string;
+      name: string;
+      slug: string;
+      logo?: string | null;
+      createdAt: string;
+    }>;
+  },
+  create: async (data: { name: string; slug: string }) => {
+    const response = await api.post("/api/auth/organization/create", data);
+    return response.data;
+  },
+  setActive: async (organizationId: string) => {
+    const response = await api.post("/api/auth/organization/set-active", {
+      organizationId,
+    });
+    return response.data;
+  },
+  getFull: async () => {
+    const response = await api.get("/api/auth/organization/get-full-organization");
+    return response.data as {
+      id: string;
+      name: string;
+      slug: string;
+      members: Array<{
+        id: string;
+        role: string;
+        userId: string;
+        user?: { id: string; name: string; email: string; image?: string | null };
+      }>;
+      invitations: Array<{
+        id: string;
+        email: string;
+        role: string;
+        status: string;
+        expiresAt: string;
+        createdAt: string;
+      }>;
+    };
+  },
+  inviteMember: async (data: { email: string; role: "member" | "admin" | "owner"; organizationId?: string }) => {
+    const response = await api.post("/api/auth/organization/invite-member", data);
+    return response.data;
+  },
+  listUserInvitations: async () => {
+    const response = await api.get("/api/auth/organization/list-user-invitations");
+    return response.data as Array<{
+      id: string;
+      organizationId: string;
+      email: string;
+      role: string;
+      status: string;
+      expiresAt: string;
+      createdAt: string;
+    }>;
+  },
+  acceptInvitation: async (invitationId: string) => {
+    const response = await api.post("/api/auth/organization/accept-invitation", {
+      invitationId,
+    });
+    return response.data;
+  },
+  rejectInvitation: async (invitationId: string) => {
+    const response = await api.post("/api/auth/organization/reject-invitation", {
+      invitationId,
+    });
+    return response.data;
   },
 };
 

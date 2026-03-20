@@ -8,6 +8,16 @@ import { userHasOutboundLine } from "../lib/vapi-integration.js";
 const router = Router();
 const PROMPT_MODES = ["default", "custom", "generated"];
 
+async function resolveActiveOrganizationId(req) {
+  const fromSession = req.session?.session?.activeOrganizationId;
+  if (fromSession) return fromSession;
+  const membership = await prisma.member.findFirst({
+    where: { userId: req.user.id },
+    orderBy: { createdAt: "asc" },
+  });
+  return membership?.organizationId || null;
+}
+
 function formatPromptProfile(profile) {
   return {
     mode: profile?.mode || "default",
@@ -23,13 +33,15 @@ function formatPromptProfile(profile) {
 router.get("/", requireAuth, async (req, res) => {
   try {
     const hasVapiKeys = await userHasOutboundLine(req.user.id);
+    const activeOrganizationId = await resolveActiveOrganizationId(req);
     const promptProfile = await prisma.promptProfile.findUnique({
-      where: { userId: req.user.id },
+      where: { organizationId: activeOrganizationId || "__none__" },
     });
     res.json({
       vapiApiKeyDisplay: null,
       vapiPhoneNumberId: null,
       hasVapiKeys,
+      activeOrganizationId,
       promptProfile: formatPromptProfile(promptProfile),
     });
   } catch (err) {
@@ -108,6 +120,10 @@ router.post("/test", requireAuth, async (req, res) => {
 
 router.put("/prompt", requireAuth, async (req, res) => {
   try {
+    const organizationId = await resolveActiveOrganizationId(req);
+    if (!organizationId) {
+      return res.status(400).json({ detail: "Join or create an organization first." });
+    }
     const mode = (req.body.mode || "default").toLowerCase();
     if (!PROMPT_MODES.includes(mode)) {
       return res.status(400).json({ detail: "Invalid mode. Use default, custom, or generated." });
@@ -131,9 +147,9 @@ router.put("/prompt", requireAuth, async (req, res) => {
     }
 
     const profile = await prisma.promptProfile.upsert({
-      where: { userId: req.user.id },
+      where: { organizationId },
       create: {
-        userId: req.user.id,
+        organizationId,
         mode,
         customPrompt: customPrompt || null,
         generatedPrompt: generatedPrompt || null,
@@ -162,6 +178,10 @@ router.put("/prompt", requireAuth, async (req, res) => {
 
 router.post("/prompt/generate", requireAuth, async (req, res) => {
   try {
+    const organizationId = await resolveActiveOrganizationId(req);
+    if (!organizationId) {
+      return res.status(400).json({ detail: "Join or create an organization first." });
+    }
     const businessName = (req.body.businessName || "").trim();
     const industry = (req.body.industry || "").trim();
     const tone = (req.body.tone || "").trim();
@@ -173,9 +193,9 @@ router.post("/prompt/generate", requireAuth, async (req, res) => {
     }
 
     const profile = await prisma.promptProfile.upsert({
-      where: { userId: req.user.id },
+      where: { organizationId },
       create: {
-        userId: req.user.id,
+        organizationId,
         mode: "generated",
         generatedPrompt: generatedPrompt.trim(),
         businessName: businessName || null,

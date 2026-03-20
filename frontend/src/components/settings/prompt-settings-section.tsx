@@ -86,6 +86,7 @@ export function PromptSettingsSection() {
 
   const activePrompt =
     mode === "custom" ? customPrompt : mode === "generated" ? generatedPrompt : "";
+  const hasActiveOrganization = !!settings?.activeOrganizationId;
 
   return (
     <Card variant="elevated" className="p-6 space-y-4">
@@ -97,6 +98,11 @@ export function PromptSettingsSection() {
         <p className="text-sm text-surface-500 dark:text-surface-400 mt-1 max-w-xl">
           Choose how your company wants reminder calls to sound: default behavior, your own custom prompt, or an AI-generated prompt.
         </p>
+        {!hasActiveOrganization && (
+          <p className="text-sm text-warning-700 dark:text-warning-300 mt-2">
+            Create or join an organization first to manage shared company prompts.
+          </p>
+        )}
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -126,7 +132,15 @@ export function PromptSettingsSection() {
       />
 
       <div className="flex flex-wrap gap-2">
-        <Button type="button" variant="outline" size="sm" leftIcon={<Wand2 className="h-4 w-4" />} isLoading={generating} onClick={generatePrompt}>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          leftIcon={<Wand2 className="h-4 w-4" />}
+          isLoading={generating}
+          disabled={!hasActiveOrganization}
+          onClick={generatePrompt}
+        >
           Generate prompt (free model)
         </Button>
       </div>
@@ -159,7 +173,13 @@ export function PromptSettingsSection() {
       )}
 
       <div className="flex justify-end">
-        <Button type="button" leftIcon={<Save className="h-4 w-4" />} isLoading={saving} onClick={() => savePromptSettings(mode)}>
+        <Button
+          type="button"
+          leftIcon={<Save className="h-4 w-4" />}
+          isLoading={saving}
+          disabled={!hasActiveOrganization}
+          onClick={() => savePromptSettings(mode)}
+        >
           Save prompt settings
         </Button>
       </div>
