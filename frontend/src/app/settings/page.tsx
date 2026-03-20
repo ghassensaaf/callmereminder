@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useSession } from "@/lib/auth-client";
-import { Settings } from "lucide-react";
+import { Settings, Phone, Building2, Sparkles, FileText } from "lucide-react";
 
 import { Header } from "@/components/layout";
 import {
@@ -14,10 +14,14 @@ import {
   PromptSettingsSection,
   OrganizationSection,
 } from "@/components/settings";
+import { Button } from "@/components/ui";
+
+type SettingsTab = "vapi" | "organization" | "prompt" | "templates";
 
 export default function SettingsPage() {
   const router = useRouter();
   const { data: session, isPending } = useSession();
+  const [activeTab, setActiveTab] = useState<SettingsTab>("vapi");
 
   useEffect(() => {
     if (!isPending && !session) {
@@ -64,10 +68,56 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <VapiConfigSection />
-          <OrganizationSection />
-          <PromptSettingsSection />
-          <TemplatesSection />
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant={activeTab === "vapi" ? "primary" : "outline"}
+              leftIcon={<Phone className="h-4 w-4" />}
+              onClick={() => setActiveTab("vapi")}
+            >
+              Vapi
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={activeTab === "organization" ? "primary" : "outline"}
+              leftIcon={<Building2 className="h-4 w-4" />}
+              onClick={() => setActiveTab("organization")}
+            >
+              Organization
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={activeTab === "prompt" ? "primary" : "outline"}
+              leftIcon={<Sparkles className="h-4 w-4" />}
+              onClick={() => setActiveTab("prompt")}
+            >
+              Prompt
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={activeTab === "templates" ? "primary" : "outline"}
+              leftIcon={<FileText className="h-4 w-4" />}
+              onClick={() => setActiveTab("templates")}
+            >
+              Templates
+            </Button>
+          </div>
+
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            {activeTab === "vapi" && <VapiConfigSection />}
+            {activeTab === "organization" && <OrganizationSection />}
+            {activeTab === "prompt" && <PromptSettingsSection />}
+            {activeTab === "templates" && <TemplatesSection />}
+          </motion.div>
         </motion.div>
       </main>
     </div>

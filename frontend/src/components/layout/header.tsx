@@ -14,6 +14,7 @@ export function Header() {
   const { data: session, isPending } = useSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+  const isSettingsPage = pathname.startsWith("/settings");
 
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
@@ -86,7 +87,11 @@ export function Header() {
                   {session ? (
                     <>
                       <Link href="/settings">
-                        <Button variant="ghost" size="sm" leftIcon={<Settings className="h-4 w-4" />}>
+                        <Button
+                          variant={isSettingsPage ? "primary" : "ghost"}
+                          size="sm"
+                          leftIcon={<Settings className="h-4 w-4" />}
+                        >
                           Settings
                         </Button>
                       </Link>
@@ -165,7 +170,7 @@ export function Header() {
                 onClick={closeMobileMenu}
                 className={cn(
                   "flex items-center gap-3 px-4 py-3 rounded-xl font-medium",
-                  pathname === "/settings"
+                  isSettingsPage
                     ? "text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-950/40"
                     : "text-surface-700 dark:text-surface-200 hover:bg-surface-100 dark:hover:bg-surface-800"
                 )}
