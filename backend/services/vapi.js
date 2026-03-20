@@ -2,6 +2,13 @@ import axios from "axios";
 
 const VAPI_BASE_URL = "https://api.vapi.ai";
 
+function resolveBusinessPrompt(profile) {
+  const mode = profile?.mode;
+  if (mode === "custom" && profile?.customPrompt?.trim()) return profile.customPrompt.trim();
+  if (mode === "generated" && profile?.generatedPrompt?.trim()) return profile.generatedPrompt.trim();
+  return null;
+}
+
 /** Server URL for Vapi webhooks (end-of-call-report). Requires API_PUBLIC_URL. */
 function assistantServerConfig() {
   const apiBaseUrl = process.env.API_PUBLIC_URL?.replace(/\/$/, "");
@@ -94,9 +101,10 @@ export async function makeCall(toPhoneNumber, message, reminderTitle, apiKey, ph
     return { success: false, callId: null, errorMessage: "Vapi not configured. Add your keys in Settings." };
   }
 
-  const { reminderId, voiceActionToken } = options;
+  const { reminderId, voiceActionToken, companyPromptProfile } = options;
   const apiBaseUrl = process.env.API_PUBLIC_URL?.replace(/\/$/, "");
   const useVoiceActions = !!(apiBaseUrl && voiceActionToken);
+  const businessPrompt = resolveBusinessPrompt(companyPromptProfile);
 
   const firstMessage = `Hello! This is Dialcues. Your reminder: ${reminderTitle}. ${message}. if you want to snooze this for 10 minutes, an hour, or tomorrow, say snooze for 10 minutes, an hour, or tomorrow. If you want to dismiss, say dismiss. If you want to repeat, say repeat. If you want to end, say end.`;
 
@@ -110,7 +118,7 @@ export async function makeCall(toPhoneNumber, message, reminderTitle, apiKey, ph
         messages: [
           {
             role: "system",
-            content: `You are a friendly reminder delivery assistant for Dialcues. Deliver the reminder, then ask if the user wants to do anything.
+            content: `${businessPrompt ? `${businessPrompt}\n\n` : ""}You are a friendly reminder delivery assistant for Dialcues. Deliver the reminder, then ask if the user wants to do anything.
 
 REMINDER TO DELIVER:
 "Hello! This is Dialcues. Your reminder: ${reminderTitle}. ${message}. if you want to snooze this for 10 minutes, an hour, or tomorrow, say snooze for 10 minutes, an hour, or tomorrow. If you want to dismiss, say dismiss. If you want to repeat, say repeat. If you want to end, say end."
@@ -176,7 +184,7 @@ Always use the exact token above when calling voiceAction.`,
         messages: [
           {
             role: "system",
-            content: `You are a reminder delivery assistant. Your ONLY task is to deliver a reminder message and immediately end the call.
+            content: `${businessPrompt ? `${businessPrompt}\n\n` : ""}You are a reminder delivery assistant. Your ONLY task is to deliver a reminder message and immediately end the call.
 
 IMPORTANT INSTRUCTIONS:
 1. Deliver the reminder message exactly as provided below

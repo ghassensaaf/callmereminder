@@ -24,7 +24,13 @@ async function processDueReminders() {
         scheduled_at: { lte: now },
       },
       orderBy: { scheduled_at: "asc" },
-      include: { user: true },
+      include: {
+        user: {
+          include: {
+            promptProfile: true,
+          },
+        },
+      },
     });
 
     if (dueReminders.length > 0) {
@@ -53,7 +59,11 @@ async function processDueReminders() {
         reminder.title,
         apiKey,
         phoneNumberId,
-        { reminderId: reminder.id, voiceActionToken }
+        {
+          reminderId: reminder.id,
+          voiceActionToken,
+          companyPromptProfile: reminder.user?.promptProfile ?? null,
+        }
       );
 
       const execStatus = success ? "completed" : "failed";

@@ -23,6 +23,7 @@ model User {
   reminderExecutions  ReminderExecution[]
   reminderTemplates   ReminderTemplate[]
   vapiConfigs         VapiConfig[]
+  promptProfile       PromptProfile?
   @@unique([email])
   @@map("user")
 }
@@ -140,4 +141,22 @@ model ReminderTemplate {
   created_at DateTime @default(now())
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@map("reminder_templates")
+}
+
+model PromptProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  mode            String   @default("default") @db.VarChar(20) // default | custom | generated
+  customPrompt    String?  @map("custom_prompt") @db.Text
+  generatedPrompt String?  @map("generated_prompt") @db.Text
+  businessName    String?  @map("business_name") @db.VarChar(120)
+  industry        String?  @db.VarChar(120)
+  tone            String?  @db.VarChar(60)
+  notes           String?  @db.Text
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("prompt_profiles")
 }

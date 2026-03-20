@@ -8,7 +8,7 @@ import { useSession } from "@/lib/auth-client";
 import { Settings } from "lucide-react";
 
 import { Header } from "@/components/layout";
-import { VapiConfigSection, TemplatesSection } from "@/components/settings";
+import { VapiConfigSection, TemplatesSection, PromptSettingsSection } from "@/components/settings";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -60,6 +60,7 @@ export default function SettingsPage() {
           </div>
 
           <VapiConfigSection />
+          <PromptSettingsSection />
           <TemplatesSection />
         </motion.div>
       </main>

@@ -156,7 +156,20 @@ export const vapiConfigsApi = {
 };
 
 export const settingsApi = {
-  get: async (): Promise<{ vapiApiKeyDisplay: string | null; vapiPhoneNumberId: string | null; hasVapiKeys: boolean }> => {
+  get: async (): Promise<{
+    vapiApiKeyDisplay: string | null;
+    vapiPhoneNumberId: string | null;
+    hasVapiKeys: boolean;
+    promptProfile: {
+      mode: "default" | "custom" | "generated";
+      customPrompt: string;
+      generatedPrompt: string;
+      businessName: string;
+      industry: string;
+      tone: string;
+      notes: string;
+    };
+  }> => {
     const response = await api.get("/api/settings");
     return response.data;
   },
@@ -171,6 +184,49 @@ export const settingsApi = {
   delete: async () => {
     const response = await api.delete("/api/settings");
     return response.data as { vapiApiKeyDisplay: null; vapiPhoneNumberId: null; hasVapiKeys: false };
+  },
+  updatePrompt: async (data: {
+    mode: "default" | "custom" | "generated";
+    customPrompt?: string;
+    generatedPrompt?: string;
+    businessName?: string;
+    industry?: string;
+    tone?: string;
+    notes?: string;
+  }) => {
+    const response = await api.put("/api/settings/prompt", data);
+    return response.data as {
+      promptProfile: {
+        mode: "default" | "custom" | "generated";
+        customPrompt: string;
+        generatedPrompt: string;
+        businessName: string;
+        industry: string;
+        tone: string;
+        notes: string;
+      };
+    };
+  },
+  generatePrompt: async (data: {
+    businessName?: string;
+    industry?: string;
+    tone?: string;
+    notes?: string;
+  }) => {
+    const response = await api.post("/api/settings/prompt/generate", data);
+    return response.data as {
+      generatedPrompt: string;
+      promptProfile: {
+        mode: "default" | "custom" | "generated";
+        customPrompt: string;
+        generatedPrompt: string;
+        businessName: string;
+        industry: string;
+        tone: string;
+        notes: string;
+      };
+      provider: "openrouter" | "fallback-template";
+    };
   },
 };
 
