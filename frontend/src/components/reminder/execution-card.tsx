@@ -302,7 +302,7 @@ export function ExecutionCard({ execution, index = 0 }: ExecutionCardProps) {
 
   const details = execution.call_details;
   const logAvailable = hasRenderableLog(details);
-  const canSync = isCompleted && !!execution.call_id?.trim();
+  const canSync = !!execution.call_id?.trim();
 
   const syncMutation = useMutation({
     mutationFn: () => remindersApi.syncExecutionCallLog(execution.id),
@@ -384,6 +384,9 @@ export function ExecutionCard({ execution, index = 0 }: ExecutionCardProps) {
               >
                 {logAvailable ? "View call details" : "Call details"}
               </Button>
+              <span className="text-xs text-surface-500 dark:text-surface-400">
+                {logAvailable ? "Transcript/recording available" : "No transcript loaded yet"}
+              </span>
               {!logAvailable && (
                 <Button
                   type="button"

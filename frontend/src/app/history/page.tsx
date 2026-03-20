@@ -85,6 +85,13 @@ export default function HistoryPage() {
             </label>
           </div>
 
+          <div className="rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50/80 dark:bg-surface-900/40 px-4 py-3">
+            <p className="text-sm text-surface-700 dark:text-surface-300">
+              Call details are saved automatically when Vapi sends an end-of-call report. If a transcript or recording is
+              missing, open a card and click <span className="font-medium">Load from Vapi</span> to sync manually.
+            </p>
+          </div>
+
           <ExecutionList
             dateFrom={dateFrom || undefined}
             dateTo={dateTo || undefined}

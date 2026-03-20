@@ -1,6 +1,7 @@
 import { Router } from "express";
 import prisma from "../lib/prisma.js";
 import { requireAuth } from "../middleware/auth.js";
+import { getSchedulerStatus } from "../services/scheduler.js";
 
 const router = Router();
 
@@ -16,6 +17,18 @@ router.get("/", requireAuth, async (req, res) => {
       prisma.reminder.count({ where: { ...where, status: "in_progress" } }),
     ]);
     res.json({ total, scheduled, paused, completed, failed, in_progress });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ detail: err.message });
+  }
+});
+
+router.get("/ops", requireAuth, async (req, res) => {
+  try {
+    res.json({
+      scheduler: getSchedulerStatus(),
+      now: new Date().toISOString(),
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ detail: err.message });

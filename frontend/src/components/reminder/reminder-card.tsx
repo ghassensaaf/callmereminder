@@ -213,6 +213,7 @@ export function ReminderCard({ reminder, index = 0 }: ReminderCardProps) {
   const canResume = reminder.status === "paused";
   const timeRemaining = formatTimeRemaining(reminder.scheduled_at);
   const isPastDue = timeRemaining === "Past due";
+  const isAutoRetrying = reminder.status === "scheduled" && !!reminder.error_message?.includes("Retrying automatically");
 
   const handleRescheduleSubmit = () => {
     if (!rescheduleDateTime) {
@@ -346,6 +347,16 @@ export function ReminderCard({ reminder, index = 0 }: ReminderCardProps) {
                   <AlertCircle className="h-4 w-4 text-danger-500 dark:text-danger-400 flex-shrink-0 mt-0.5" />
                   <p className="text-sm text-danger-700 dark:text-danger-300">
                     {formatErrorMessage(reminder.error_message)}
+                  </p>
+                </div>
+              </div>
+            )}
+            {isAutoRetrying && reminder.error_message && (
+              <div className="mt-3 p-3 bg-warning-50 dark:bg-warning-950/25 rounded-lg border border-warning-100 dark:border-warning-800/50">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 text-warning-600 dark:text-warning-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-warning-800 dark:text-warning-200">
+                    {reminder.error_message}
                   </p>
                 </div>
               </div>

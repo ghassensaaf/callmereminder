@@ -158,8 +158,8 @@ export function ReminderList({
         title="No reminders yet"
         description={
           needsVapiSetup
-            ? "Add a Vapi integration with at least one phone number in Settings to create voice call reminders."
-            : "Create your first reminder and never miss an important moment again. We'll call you when it's time!"
+            ? "You are one step away: connect Vapi and add an outbound phone number in Settings, then create your first reminder."
+            : "Create your first reminder in under a minute: choose a title, enter your message, and pick a date/time."
         }
         action={
           needsVapiSetup ? (

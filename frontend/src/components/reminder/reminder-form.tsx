@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { Clock, MessageSquare, Calendar, Repeat } from "lucide-react";
+import { Clock, MessageSquare, Calendar, Repeat, LocateFixed } from "lucide-react";
 import { motion } from "framer-motion";
 import { isValidPhoneNumber } from "libphonenumber-js";
 
@@ -209,6 +209,7 @@ export function ReminderForm({
   };
 
   const isLoading = createMutation.isPending || updateMutation.isPending;
+  const detectedTimezone = detectTimezone();
 
   // Get minimum datetime (now)
   const minDateTime = toLocalDateTimeString(new Date());
@@ -321,9 +322,22 @@ export function ReminderForm({
               error={errors.timezone?.message}
               {...register("timezone")}
             />
-            {watch("timezone") === detectTimezone() && (
-              <p className="text-xs text-muted-foreground">Using your detected timezone</p>
-            )}
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                leftIcon={<LocateFixed className="h-3.5 w-3.5" />}
+                onClick={() => setValue("timezone", detectedTimezone, { shouldValidate: true })}
+              >
+                Use browser timezone
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                {watch("timezone") === detectedTimezone
+                  ? "Using your detected timezone"
+                  : `Detected timezone: ${detectedTimezone}`}
+              </p>
+            </div>
           </div>
         </div>
 

@@ -25,6 +25,38 @@ function formatExecution(e) {
   };
 }
 
+function parseCustomRecurrenceConfig(rawConfig) {
+  let parsed;
+  try {
+    parsed = typeof rawConfig === "string" ? JSON.parse(rawConfig) : rawConfig;
+  } catch {
+    return { ok: false, detail: "Invalid custom recurrence config JSON." };
+  }
+  if (!parsed || typeof parsed !== "object") {
+    return { ok: false, detail: "Custom recurrence config must be an object." };
+  }
+
+  const intervalDays = Number(parsed.interval_days);
+  if (Number.isFinite(intervalDays) && intervalDays >= 1) {
+    return {
+      ok: true,
+      config: { interval_days: Math.min(365, Math.floor(intervalDays)) },
+    };
+  }
+
+  if (Array.isArray(parsed.weekdays)) {
+    const weekdays = [...new Set(parsed.weekdays.map((n) => Number(n)).filter((n) => Number.isInteger(n) && n >= 0 && n <= 6))].sort(
+      (a, b) => a - b
+    );
+    if (!weekdays.length) {
+      return { ok: false, detail: "Custom weekdays recurrence requires at least one weekday." };
+    }
+    return { ok: true, config: { weekdays } };
+  }
+
+  return { ok: false, detail: "Custom recurrence must provide interval_days or weekdays." };
+}
+
 router.post("/", requireAuth, async (req, res) => {
   try {
     const { title, message, phone_number, scheduled_at, timezone, recurrence_type, recurrence_config } = req.body;
@@ -53,13 +85,23 @@ router.post("/", requireAuth, async (req, res) => {
     };
     if (recurrence_type !== undefined) {
       data.recurrence_type = ["daily", "weekly", "custom"].includes(recurrence_type) ? recurrence_type : null;
+      if (data.recurrence_type !== "custom") {
+        data.recurrence_config = null;
+      }
     }
     if (recurrence_config !== undefined && data.recurrence_type === "custom") {
-      data.recurrence_config =
-        typeof recurrence_config === "string" ? recurrence_config : JSON.stringify(recurrence_config);
+      const parsed = parseCustomRecurrenceConfig(recurrence_config);
+      if (!parsed.ok) return res.status(400).json({ detail: parsed.detail });
+      data.recurrence_config = JSON.stringify(parsed.config);
+    }
+    if (data.recurrence_type === "custom" && !data.recurrence_config) {
+      return res.status(400).json({ detail: "Custom recurrence requires recurrence_config." });
     }
     if (recurrence_end_at !== undefined && data.recurrence_type) {
       data.recurrence_end_at = recurrence_end_at ? toUtc(recurrence_end_at, timezone) : null;
+      if (data.recurrence_end_at && data.recurrence_end_at <= scheduledUtc) {
+        return res.status(400).json({ detail: "Recurrence end date must be after the first scheduled run." });
+      }
     }
 
     const hasOutbound = await userHasOutboundLine(req.user.id);
@@ -369,14 +411,28 @@ router.put("/:id", requireAuth, async (req, res) => {
     }
     if (recurrence_type !== undefined) {
       data.recurrence_type = ["daily", "weekly", "custom"].includes(recurrence_type) ? recurrence_type : null;
+      if (data.recurrence_type !== "custom") {
+        data.recurrence_config = null;
+      }
     }
     if (recurrence_config !== undefined && (data.recurrence_type === "custom" || reminder.recurrence_type === "custom")) {
-      data.recurrence_config =
-        typeof recurrence_config === "string" ? recurrence_config : JSON.stringify(recurrence_config);
+      const parsed = parseCustomRecurrenceConfig(recurrence_config);
+      if (!parsed.ok) return res.status(400).json({ detail: parsed.detail });
+      data.recurrence_config = JSON.stringify(parsed.config);
+    }
+    if ((data.recurrence_type === "custom" || (data.recurrence_type === undefined && reminder.recurrence_type === "custom")) &&
+      recurrence_config === undefined &&
+      !reminder.recurrence_config
+    ) {
+      return res.status(400).json({ detail: "Custom recurrence requires recurrence_config." });
     }
     if (recurrence_end_at !== undefined && (data.recurrence_type || reminder.recurrence_type)) {
       const tz = timezone ?? reminder.timezone;
       data.recurrence_end_at = recurrence_end_at ? toUtc(recurrence_end_at, tz) : null;
+      const effectiveScheduledAt = data.scheduled_at ?? reminder.scheduled_at;
+      if (data.recurrence_end_at && data.recurrence_end_at <= effectiveScheduledAt) {
+        return res.status(400).json({ detail: "Recurrence end date must be after the next scheduled run." });
+      }
     }
     if (status === "paused" && reminder.status === "scheduled" && reminder.recurrence_type) {
       data.status = "paused";

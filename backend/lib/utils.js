@@ -1,4 +1,4 @@
-import { addDays, addWeeks } from "date-fns";
+import { addDays, addWeeks, format } from "date-fns";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
 
 export const E164_REGEX = /^\+[1-9]\d{1,14}$/;
@@ -25,40 +25,51 @@ export function toUtc(naiveDateStr, tzName) {
 export function computeNextScheduledAt(currentScheduled, timezone, recurrenceType, recurrenceConfig) {
   const tz = timezone || "UTC";
   const zoned = toZonedTime(currentScheduled, tz);
+  const localTime = format(zoned, "HH:mm:ss");
 
-  let nextZoned;
+  function toUtcAtSameLocalTime(nextLocalDate) {
+    const localDate = format(nextLocalDate, "yyyy-MM-dd");
+    return fromZonedTime(`${localDate}T${localTime}`, tz);
+  }
+
+  let nextLocalDate;
   if (recurrenceType === "daily") {
-    nextZoned = addDays(zoned, 1);
+    nextLocalDate = addDays(zoned, 1);
   } else if (recurrenceType === "weekly") {
-    nextZoned = addWeeks(zoned, 1);
+    nextLocalDate = addWeeks(zoned, 1);
   } else if (recurrenceType === "custom" && recurrenceConfig) {
     let config;
     try {
       config = typeof recurrenceConfig === "string" ? JSON.parse(recurrenceConfig) : recurrenceConfig;
     } catch {
-      return addDays(zoned, 1);
+      return toUtcAtSameLocalTime(addDays(zoned, 1));
     }
     // Every N days: {"interval_days": 3}
-    const intervalDays = config.interval_days;
-    if (typeof intervalDays === "number" && intervalDays >= 1) {
-      nextZoned = addDays(zoned, intervalDays);
+    const intervalDays = Number(config.interval_days);
+    if (Number.isFinite(intervalDays) && intervalDays >= 1) {
+      nextLocalDate = addDays(zoned, Math.min(365, Math.floor(intervalDays)));
     } else {
       // Specific weekdays: {"weekdays":[1,3,5]}
-      const weekdays = config.weekdays;
+      const weekdays = Array.isArray(config.weekdays)
+        ? [...new Set(config.weekdays.map((n) => Number(n)).filter((n) => Number.isInteger(n) && n >= 0 && n <= 6))]
+        : [];
       if (!Array.isArray(weekdays) || weekdays.length === 0) {
-        return addDays(zoned, 1);
+        return toUtcAtSameLocalTime(addDays(zoned, 1));
       }
       const currentDay = zoned.getDay();
       const sorted = [...weekdays].sort((a, b) => a - b);
-      const nextDay = sorted.find((d) => d > currentDay) ?? sorted[0];
-      const daysToAdd = nextDay > currentDay ? nextDay - currentDay : 7 - currentDay + nextDay;
-      nextZoned = addDays(zoned, daysToAdd);
+      let daysToAdd = sorted
+        .map((d) => (d > currentDay ? d - currentDay : 7 - currentDay + d))
+        .filter((d) => d > 0)
+        .sort((a, b) => a - b)[0];
+      if (!daysToAdd) daysToAdd = 7;
+      nextLocalDate = addDays(zoned, daysToAdd);
     }
   } else {
-    return addDays(zoned, 1);
+    return toUtcAtSameLocalTime(addDays(zoned, 1));
   }
 
-  return fromZonedTime(nextZoned, tz);
+  return toUtcAtSameLocalTime(nextLocalDate);
 }
 
 export function formatReminder(r) {
