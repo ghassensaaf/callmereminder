@@ -6,7 +6,7 @@ import { requireAuth } from "../middleware/auth.js";
 import { E164_REGEX, STATUSES, toUtc, formatReminder } from "../lib/utils.js";
 import { verifyVoiceActionToken } from "../lib/voice-action-token.js";
 import { fetchCallLog } from "../services/vapi.js";
-import { assertOrResolveVapiLine, getDefaultOutboundLine } from "../lib/vapi-integration.js";
+import { assertOrResolveVapiLine, getDefaultOutboundLine, userHasOutboundLine } from "../lib/vapi-integration.js";
 
 const router = Router();
 
@@ -60,6 +60,14 @@ router.post("/", requireAuth, async (req, res) => {
     }
     if (recurrence_end_at !== undefined && data.recurrence_type) {
       data.recurrence_end_at = recurrence_end_at ? toUtc(recurrence_end_at, timezone) : null;
+    }
+
+    const hasOutbound = await userHasOutboundLine(req.user.id);
+    if (!hasOutbound) {
+      return res.status(400).json({
+        detail:
+          "Add a Vapi integration with at least one phone number in Settings before creating reminders.",
+      });
     }
 
     const lineResult = await assertOrResolveVapiLine(req.user.id, req.body.vapi_line_id);

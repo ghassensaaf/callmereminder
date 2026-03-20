@@ -2,21 +2,12 @@ import { Router } from "express";
 import prisma from "../lib/prisma.js";
 import { requireAuth } from "../middleware/auth.js";
 import { validateVapiConfig } from "../services/vapi.js";
-import { ensureLegacyVapiMigrated, userHasOutboundLine } from "../lib/vapi-integration.js";
+import { userHasOutboundLine } from "../lib/vapi-integration.js";
 
 const router = Router();
 
 router.get("/", requireAuth, async (req, res) => {
   try {
-    let settings = await prisma.userSettings.findUnique({
-      where: { userId: req.user.id },
-    });
-    if (!settings) {
-      settings = await prisma.userSettings.create({
-        data: { userId: req.user.id },
-      });
-    }
-    await ensureLegacyVapiMigrated(req.user.id);
     const hasVapiKeys = await userHasOutboundLine(req.user.id);
     res.json({
       vapiApiKeyDisplay: null,
@@ -32,7 +23,6 @@ router.get("/", requireAuth, async (req, res) => {
 /** @deprecated Use POST /api/vapi-configs. Only works when user has zero configs (bootstrap). */
 router.put("/", requireAuth, async (req, res) => {
   try {
-    await ensureLegacyVapiMigrated(req.user.id);
     const existing = await prisma.vapiConfig.count({ where: { userId: req.user.id } });
     if (existing > 0) {
       return res.status(400).json({
@@ -72,11 +62,6 @@ router.put("/", requireAuth, async (req, res) => {
       });
     });
 
-    await prisma.userSettings.update({
-      where: { userId: req.user.id },
-      data: { vapiApiKey: null, vapiPhoneNumberId: null },
-    });
-
     res.json({
       vapiApiKeyDisplay: "*****" + apiKey.slice(-5),
       vapiPhoneNumberId: phoneId,
@@ -106,11 +91,6 @@ router.post("/test", requireAuth, async (req, res) => {
 router.delete("/", requireAuth, async (req, res) => {
   try {
     await prisma.vapiConfig.deleteMany({ where: { userId: req.user.id } });
-    await prisma.userSettings.upsert({
-      where: { userId: req.user.id },
-      create: { userId: req.user.id, vapiApiKey: null, vapiPhoneNumberId: null },
-      update: { vapiApiKey: null, vapiPhoneNumberId: null },
-    });
     res.json({
       vapiApiKeyDisplay: null,
       vapiPhoneNumberId: null,

@@ -1,45 +1,6 @@
 import prisma from "./prisma.js";
 
-/**
- * One-time migration from user_settings.vapi* to VapiConfig + VapiPhoneNumber.
- */
-export async function ensureLegacyVapiMigrated(userId) {
-  const existing = await prisma.vapiConfig.count({ where: { userId } });
-  if (existing > 0) return;
-
-  const legacy = await prisma.userSettings.findUnique({ where: { userId } });
-  if (!legacy?.vapiApiKey?.trim() || !legacy?.vapiPhoneNumberId?.trim()) return;
-
-  await prisma.$transaction(async (tx) => {
-    const config = await tx.vapiConfig.create({
-      data: {
-        userId,
-        name: "Default",
-        vapiApiKey: legacy.vapiApiKey.trim(),
-        isDefault: true,
-      },
-    });
-    const line = await tx.vapiPhoneNumber.create({
-      data: {
-        vapiConfigId: config.id,
-        vapiPhoneNumberId: legacy.vapiPhoneNumberId.trim(),
-        nickname: "Primary",
-        isDefault: true,
-      },
-    });
-    await tx.reminder.updateMany({
-      where: { userId, vapiLineId: null },
-      data: { vapiLineId: line.id },
-    });
-    await tx.userSettings.update({
-      where: { userId },
-      data: { vapiApiKey: null, vapiPhoneNumberId: null },
-    });
-  });
-}
-
 export async function userHasOutboundLine(userId) {
-  await ensureLegacyVapiMigrated(userId);
   const n = await prisma.vapiPhoneNumber.count({
     where: { config: { userId } },
   });
@@ -51,8 +12,6 @@ export async function userHasOutboundLine(userId) {
  * @returns {Promise<{ lineId: string, vapiPhoneNumberId: string, apiKey: string } | null>}
  */
 export async function getDefaultOutboundLine(userId) {
-  await ensureLegacyVapiMigrated(userId);
-
   const defaultConfig = await prisma.vapiConfig.findFirst({
     where: { userId, isDefault: true },
     include: {
@@ -90,7 +49,6 @@ export async function getDefaultOutboundLine(userId) {
  * @returns {Promise<{ lineId: string, vapiPhoneNumberId: string, apiKey: string } | null>}
  */
 export async function resolveLineForDial(userId, vapiLineId) {
-  await ensureLegacyVapiMigrated(userId);
   if (vapiLineId?.trim()) {
     const line = await prisma.vapiPhoneNumber.findFirst({
       where: { id: vapiLineId.trim(), config: { userId } },
@@ -112,7 +70,6 @@ export async function resolveLineForDial(userId, vapiLineId) {
  * @returns {{ ok: true, vapiLineId: string | null } | { ok: false, detail: string }}
  */
 export async function assertOrResolveVapiLine(userId, vapiLineId) {
-  await ensureLegacyVapiMigrated(userId);
   const hasLines = (await prisma.vapiPhoneNumber.count({ where: { config: { userId } } })) > 0;
   if (!hasLines) {
     return { ok: true, vapiLineId: null };

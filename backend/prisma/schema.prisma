@@ -22,7 +22,6 @@ model User {
   reminders           Reminder[]
   reminderExecutions  ReminderExecution[]
   reminderTemplates   ReminderTemplate[]
-  settings            UserSettings?
   vapiConfigs         VapiConfig[]
   @@unique([email])
   @@map("user")
@@ -58,18 +57,6 @@ model Account {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
   @@map("account")
-}
-
-// User settings row (legacy Vapi fields migrated to VapiConfig on first load)
-model UserSettings {
-  id                String   @id @default(cuid())
-  userId            String   @unique
-  vapiApiKey        String?
-  vapiPhoneNumberId String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  @@map("user_settings")
 }
 
 /// Named Vapi account: one API key, many outbound numbers (each validated).

@@ -99,7 +99,7 @@ callMeReminder/
 │   ├── index.js              # Express server, CORS, Better Auth mount
 │   ├── auth.js               # Better Auth config (email/password, dash plugin)
 │   ├── prisma/
-│   │   └── schema.prisma     # User, Session, Reminder, UserSettings
+│   │   └── schema.prisma     # User, Session, Reminder, VapiConfig, VapiPhoneNumber
 │   ├── routes/               # /api/reminders, /api/stats, /api/settings
 │   ├── services/
 │   │   ├── scheduler.js     # 15s interval, processes due reminders
@@ -130,8 +130,8 @@ callMeReminder/
 
 ### Vapi
 
-- Each user adds their own **Vapi API key** and **Phone Number ID** in Settings
-- Stored in `user_settings` (encrypted/masked in API responses)
+- Each user adds **Vapi** lines in Settings (API key per config, one or more phone number IDs)
+- Stored in `vapi_configs` / `vapi_phone_numbers` (API key masked in API responses)
 - When a reminder is due, backend fetches the user's Vapi credentials and initiates the call
 - Voice message: *"Hello! This is Dialcues. Your reminder: [title]. [message]. Goodbye!"*
 

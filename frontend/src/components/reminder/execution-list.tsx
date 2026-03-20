@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { History, Search, AlertTriangle, Download } from "lucide-react";
 
@@ -11,13 +12,16 @@ interface ExecutionListProps {
   dateFrom?: string;
   dateTo?: string;
   onCreateClick?: () => void;
+  needsVapiSetup?: boolean;
 }
 
 export function ExecutionList({
   dateFrom,
   dateTo,
   onCreateClick,
+  needsVapiSetup = false,
 }: ExecutionListProps) {
+  const router = useRouter();
   const {
     data,
     isLoading,
@@ -84,12 +88,22 @@ export function ExecutionList({
       <EmptyState
         icon={<History className="h-8 w-8" />}
         title="No history yet"
-        description="Your reminder execution history will appear here once reminders run."
+        description={
+          needsVapiSetup
+            ? "Configure Vapi with a phone number in Settings, then create reminders to see call history here."
+            : "Your reminder execution history will appear here once reminders run."
+        }
         action={
-          onCreateClick && (
-            <Button onClick={onCreateClick} variant="primary">
-              Create Reminder
+          needsVapiSetup ? (
+            <Button onClick={() => router.push("/settings")} variant="primary">
+              Configure Vapi
             </Button>
+          ) : (
+            onCreateClick && (
+              <Button onClick={onCreateClick} variant="primary">
+                Create Reminder
+              </Button>
+            )
           )
         }
       />

@@ -3,7 +3,6 @@ import prisma from "../lib/prisma.js";
 import { requireAuth } from "../middleware/auth.js";
 import { validateVapiConfig } from "../services/vapi.js";
 import {
-  ensureLegacyVapiMigrated,
   unsetOtherDefaultConfigs,
   unsetOtherDefaultNumbers,
   promoteOtherDefaultNumber,
@@ -35,7 +34,6 @@ router.use(requireAuth);
 
 router.get("/", async (req, res) => {
   try {
-    await ensureLegacyVapiMigrated(req.user.id);
     const configs = await prisma.vapiConfig.findMany({
       where: { userId: req.user.id },
       include: { numbers: { orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }] } },
@@ -59,7 +57,6 @@ router.get("/", async (req, res) => {
 
 router.post("/", async (req, res) => {
   try {
-    await ensureLegacyVapiMigrated(req.user.id);
     const name = req.body.name?.trim();
     const vapiApiKey = req.body.vapiApiKey?.trim();
     if (!name || !vapiApiKey) {

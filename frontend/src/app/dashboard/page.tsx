@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 
 import { Header } from "@/components/layout";
@@ -9,6 +10,7 @@ import { AuthGuard } from "@/components/auth-guard";
 import { FilterTabs, SearchInput, VapiConfigWarning } from "@/components/dashboard";
 import { ReminderForm, ReminderList, ExecutionList, StatsCards } from "@/components/reminder";
 import { Button, Modal } from "@/components/ui";
+import { settingsApi } from "@/lib/api";
 import { ReminderStatus } from "@/types/reminder";
 
 type FilterOption = ReminderStatus | "all" | "history";
@@ -22,10 +24,17 @@ export default function DashboardPage() {
   const [listDateFrom, setListDateFrom] = useState("");
   const [listDateTo, setListDateTo] = useState("");
 
+  const { data: settings } = useQuery({
+    queryKey: ["settings"],
+    queryFn: () => settingsApi.get(),
+  });
+  const needsVapiSetup = settings != null && settings.hasVapiKeys === false;
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "n" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
+        if (needsVapiSetup) return;
         setIsCreateModalOpen(true);
       }
       if (e.key === "Escape") {
@@ -34,7 +43,7 @@ export default function DashboardPage() {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [needsVapiSetup]);
 
   return (
     <AuthGuard>
@@ -58,10 +67,15 @@ export default function DashboardPage() {
             </p>
           </div>
           <Button
-            onClick={() => setIsCreateModalOpen(true)}
+            onClick={() => !needsVapiSetup && setIsCreateModalOpen(true)}
+            disabled={needsVapiSetup}
             leftIcon={<Plus className="h-4 w-4" />}
             className="w-full sm:w-auto shrink-0"
-            title="Shortcut: Ctrl+N or Cmd+N"
+            title={
+              needsVapiSetup
+                ? "Add a Vapi integration with a phone number in Settings first"
+                : "Shortcut: Ctrl+N or Cmd+N"
+            }
           >
             New Reminder
           </Button>
@@ -118,7 +132,8 @@ export default function DashboardPage() {
             <ExecutionList
               dateFrom={historyDateFrom || undefined}
               dateTo={historyDateTo || undefined}
-              onCreateClick={() => setIsCreateModalOpen(true)}
+              onCreateClick={() => !needsVapiSetup && setIsCreateModalOpen(true)}
+              needsVapiSetup={needsVapiSetup}
             />
           </div>
         ) : (
@@ -150,7 +165,8 @@ export default function DashboardPage() {
               search={search}
               dateFrom={listDateFrom || undefined}
               dateTo={listDateTo || undefined}
-              onCreateClick={() => setIsCreateModalOpen(true)}
+              onCreateClick={() => !needsVapiSetup && setIsCreateModalOpen(true)}
+              needsVapiSetup={needsVapiSetup}
             />
           </div>
         )}

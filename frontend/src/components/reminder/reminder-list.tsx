@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { Bell, Search, AlertTriangle, Trash2 } from "lucide-react";
@@ -16,6 +17,8 @@ interface ReminderListProps {
   dateFrom?: string;
   dateTo?: string;
   onCreateClick?: () => void;
+  /** When true, empty states offer Settings instead of creating a reminder */
+  needsVapiSetup?: boolean;
 }
 
 export function ReminderList({
@@ -24,7 +27,9 @@ export function ReminderList({
   dateFrom,
   dateTo,
   onCreateClick,
+  needsVapiSetup = false,
 }: ReminderListProps) {
+  const router = useRouter();
   const queryClient = useQueryClient();
 
   const sort =
@@ -93,12 +98,22 @@ export function ReminderList({
         <EmptyState
           icon={<Search className="h-8 w-8" />}
           title="No results found"
-          description={`No reminders matching "${search}". Try adjusting your search or create a new reminder.`}
+          description={
+            needsVapiSetup
+              ? `No reminders matching "${search}". Configure Vapi in Settings to create reminders.`
+              : `No reminders matching "${search}". Try adjusting your search or create a new reminder.`
+          }
           action={
-            onCreateClick && (
-              <Button onClick={onCreateClick} variant="primary">
-                Create Reminder
+            needsVapiSetup ? (
+              <Button onClick={() => router.push("/settings")} variant="primary">
+                Configure Vapi
               </Button>
+            ) : (
+              onCreateClick && (
+                <Button onClick={onCreateClick} variant="primary">
+                  Create Reminder
+                </Button>
+              )
             )
           }
         />
@@ -121,11 +136,17 @@ export function ReminderList({
           description={`You don't have any ${statusLabels[status]} reminders yet.`}
           action={
             status === "scheduled" &&
-            onCreateClick && (
-              <Button onClick={onCreateClick} variant="primary">
-                Create Your First Reminder
+            (needsVapiSetup ? (
+              <Button onClick={() => router.push("/settings")} variant="primary">
+                Configure Vapi
               </Button>
-            )
+            ) : (
+              onCreateClick && (
+                <Button onClick={onCreateClick} variant="primary">
+                  Create Your First Reminder
+                </Button>
+              )
+            ))
           }
         />
       );
@@ -135,12 +156,22 @@ export function ReminderList({
       <EmptyState
         icon={<Bell className="h-8 w-8" />}
         title="No reminders yet"
-        description="Create your first reminder and never miss an important moment again. We'll call you when it's time!"
+        description={
+          needsVapiSetup
+            ? "Add a Vapi integration with at least one phone number in Settings to create voice call reminders."
+            : "Create your first reminder and never miss an important moment again. We'll call you when it's time!"
+        }
         action={
-          onCreateClick && (
-            <Button onClick={onCreateClick} variant="primary" size="lg">
-              Create Your First Reminder
+          needsVapiSetup ? (
+            <Button onClick={() => router.push("/settings")} variant="primary" size="lg">
+              Go to Settings
             </Button>
+          ) : (
+            onCreateClick && (
+              <Button onClick={onCreateClick} variant="primary" size="lg">
+                Create Your First Reminder
+              </Button>
+            )
           )
         }
       />
