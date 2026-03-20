@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import axios from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -64,7 +64,7 @@ function hasRenderableLog(details: CallLogDetails | null | undefined): boolean {
   return false;
 }
 
-function MetaChip({ children, className }: { children: React.ReactNode; className?: string }) {
+function MetaChip({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <span
       className={cn(
