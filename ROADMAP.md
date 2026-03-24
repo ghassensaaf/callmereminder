@@ -70,6 +70,12 @@ Small, high-leverage improvements; not a new “phase” but worth tracking.
 - **API keys** for server-to-server; **OAuth** if you need user-delegated access for consumer apps
 - Rate limits, versioning, and stable error shapes
 
+### Phase 3 status (started)
+
+- Added versioned REST endpoints under `GET/POST/PATCH/DELETE /api/public/v1/*`
+- Added API key model + key management routes for owners/admins (`/api/public-api-keys`)
+- Added developer docs and OpenAPI spec (`docs/public-api.md`, `docs/public-api.openapi.yaml`)
+
 *Natural order:* ship Phase 2 or a stable “BYO + API” slice first so the API contract matches production behavior.
 
 ---

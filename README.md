@@ -87,6 +87,10 @@ cd frontend && npm run dev
 
 ```
 callMeReminder/
+├── docs/
+│   ├── public-api.md          # Public REST API guide (auth, endpoints, SDK examples)
+│   └── public-api.openapi.yaml# OpenAPI 3.0 spec for /api/public/v1
+│
 ├── frontend/                 # Next.js 16 (App Router)
 │   ├── src/app/              # /, /dashboard, /history, /login, /signup, /settings,
 │   │                         # /onboarding/organization, /forgot-password, /reset-password,
@@ -155,6 +159,13 @@ REST examples (all cookie-authenticated unless noted):
 | Settings | `GET /api/settings`, `PUT /api/settings/prompt`, `POST /api/settings/prompt/generate` |
 | Vapi configs | `GET/POST /api/vapi-configs`, … |
 | Templates | `GET/POST/DELETE /api/templates` |
+| Public API keys (owner/admin) | `GET/POST /api/public-api-keys`, `POST /api/public-api-keys/:id/revoke` |
+| Public REST API (Bearer key) | `GET /api/public/v1/me`, `GET/POST/PATCH/DELETE /api/public/v1/reminders`, `GET /api/public/v1/executions` |
+
+### Public API docs
+
+- Guide: `docs/public-api.md`
+- OpenAPI spec: `docs/public-api.openapi.yaml`
 
 ---
 

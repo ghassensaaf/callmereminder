@@ -1,0 +1,166 @@
+openapi: 3.0.3
+info:
+  title: Dialcues Public API
+  version: "1.0.0"
+  description: Public REST API for creating and managing reminders with API keys.
+servers:
+  - url: https://api.yourapp.com/api/public/v1
+security:
+  - bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: API Key
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: { type: string }
+            message: { type: string }
+            details: { nullable: true }
+    Reminder:
+      type: object
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        message: { type: string }
+        phone_number: { type: string }
+        scheduled_at: { type: string, format: date-time }
+        timezone: { type: string }
+        status: { type: string }
+        vapi_line_id: { type: string, nullable: true }
+        outbound_line_label: { type: string, nullable: true }
+        recurrence_type: { type: string, nullable: true }
+        recurrence_config: { type: string, nullable: true }
+        recurrence_end_at: { type: string, format: date-time, nullable: true }
+        retry_count: { type: integer }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time, nullable: true }
+paths:
+  /me:
+    get:
+      summary: Authenticated API key identity
+      responses:
+        "200":
+          description: Caller identity
+  /reminders:
+    get:
+      summary: List reminders
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string }
+        - in: query
+          name: search
+          schema: { type: string }
+        - in: query
+          name: date_from
+          schema: { type: string, format: date-time }
+        - in: query
+          name: date_to
+          schema: { type: string, format: date-time }
+        - in: query
+          name: sort
+          schema: { type: string }
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: page_size
+          schema: { type: integer, maximum: 100 }
+      responses:
+        "200":
+          description: Paginated reminders
+    post:
+      summary: Create reminder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, message, phone_number, scheduled_at, timezone]
+              properties:
+                title: { type: string }
+                message: { type: string }
+                phone_number: { type: string }
+                scheduled_at: { type: string }
+                timezone: { type: string }
+                vapi_line_id: { type: string }
+                recurrence_type: { type: string, nullable: true }
+                recurrence_config: { nullable: true }
+                recurrence_end_at: { type: string, nullable: true }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Reminder"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /reminders/{id}:
+    get:
+      summary: Get reminder
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Reminder
+    patch:
+      summary: Update reminder
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Updated reminder
+    delete:
+      summary: Delete reminder
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+  /executions:
+    get:
+      summary: List reminder executions
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: page_size
+          schema: { type: integer, maximum: 100 }
+        - in: query
+          name: date_from
+          schema: { type: string, format: date-time }
+        - in: query
+          name: date_to
+          schema: { type: string, format: date-time }
+      responses:
+        "200":
+          description: Paginated executions
