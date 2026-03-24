@@ -10,8 +10,6 @@ import {
   Copy,
   Check,
   ChevronDown,
-  MoonStar,
-  Sparkles,
 } from "lucide-react";
 
 import { Header } from "@/components/layout";
@@ -49,7 +47,7 @@ function mkSections(): DocSection[] {
         <>
           <p>
             The Dialcues API is organized around{" "}
-            <span className="text-white font-medium">REST</span>. Our API has
+            <span className="text-slate-900 dark:text-white font-medium">REST</span>. Our API has
             predictable resource-oriented URLs, accepts JSON-encoded request
             bodies, returns JSON-encoded responses, and uses standard HTTP
             response codes, authentication, and verbs.
@@ -102,7 +100,7 @@ curl ${BASE}/api/public/v1/me \\
             <p className="text-[11px] uppercase tracking-wide text-slate-500 mb-1">
               Your API key
             </p>
-            <p className="text-sm text-slate-300">
+            <p className="text-sm text-slate-700 dark:text-slate-300">
               A test API key is included in all examples. Replace the sample
               key with your actual API key to test requests against your
               account.
@@ -175,19 +173,19 @@ var res = await client.GetAsync("${BASE}/api/public/v1/reminders");`,
                 <th className="pb-2">Meaning</th>
               </tr>
             </thead>
-            <tbody className="text-slate-300">
+            <tbody className="text-slate-700 dark:text-slate-300">
               <tr className="border-b border-slate-800">
-                <td className="py-2 pr-4 font-mono text-white">200</td>
+                <td className="py-2 pr-4 font-mono text-slate-900 dark:text-white">200</td>
                 <td className="py-2 pr-4">OK</td>
                 <td className="py-2">Everything worked as expected.</td>
               </tr>
               <tr className="border-b border-slate-800">
-                <td className="py-2 pr-4 font-mono text-white">201</td>
+                <td className="py-2 pr-4 font-mono text-slate-900 dark:text-white">201</td>
                 <td className="py-2 pr-4">Created</td>
                 <td className="py-2">A new resource was successfully created.</td>
               </tr>
               <tr className="border-b border-slate-800">
-                <td className="py-2 pr-4 font-mono text-white">400</td>
+                <td className="py-2 pr-4 font-mono text-slate-900 dark:text-white">400</td>
                 <td className="py-2 pr-4">Bad Request</td>
                 <td className="py-2">
                   The request was unacceptable, often due to a missing
@@ -195,17 +193,17 @@ var res = await client.GetAsync("${BASE}/api/public/v1/reminders");`,
                 </td>
               </tr>
               <tr className="border-b border-slate-800">
-                <td className="py-2 pr-4 font-mono text-white">401</td>
+                <td className="py-2 pr-4 font-mono text-slate-900 dark:text-white">401</td>
                 <td className="py-2 pr-4">Unauthorized</td>
                 <td className="py-2">No valid API key provided.</td>
               </tr>
               <tr className="border-b border-slate-800">
-                <td className="py-2 pr-4 font-mono text-white">404</td>
+                <td className="py-2 pr-4 font-mono text-slate-900 dark:text-white">404</td>
                 <td className="py-2 pr-4">Not Found</td>
                 <td className="py-2">The requested resource doesn&#39;t exist.</td>
               </tr>
               <tr>
-                <td className="py-2 pr-4 font-mono text-white">500</td>
+                <td className="py-2 pr-4 font-mono text-slate-900 dark:text-white">500</td>
                 <td className="py-2 pr-4">Server Error</td>
                 <td className="py-2">Something went wrong on our end.</td>
               </tr>
@@ -216,7 +214,7 @@ var res = await client.GetAsync("${BASE}/api/public/v1/reminders");`,
             <p className="text-[11px] uppercase tracking-wide text-slate-500 mb-1">
               Error codes & messages
             </p>
-            <p className="text-sm text-slate-300">
+            <p className="text-sm text-slate-700 dark:text-slate-300">
               For public API endpoints, errors always return the same shape:
               <code className="ml-2">{`{ error: { code, message, details } }`}</code>.
               The <code>message</code> is human-friendly; the <code>code</code> is stable for programmatic handling.
@@ -265,49 +263,49 @@ var res = await client.GetAsync("${BASE}/api/public/v1/reminders");`,
                 <th className="pb-2">When it happens</th>
               </tr>
             </thead>
-            <tbody className="text-slate-300">
+            <tbody className="text-slate-700 dark:text-slate-300">
               <tr className="border-b border-slate-800">
-                <td className="py-2 pr-4 font-mono text-white">unauthorized</td>
+                <td className="py-2 pr-4 font-mono text-slate-900 dark:text-white">unauthorized</td>
                 <td className="py-2 pr-4">401</td>
                 <td className="py-2">Missing <code>Authorization: Bearer ...</code></td>
               </tr>
               <tr className="border-b border-slate-800">
-                <td className="py-2 pr-4 font-mono text-white">invalid_api_key</td>
+                <td className="py-2 pr-4 font-mono text-slate-900 dark:text-white">invalid_api_key</td>
                 <td className="py-2 pr-4">401</td>
                 <td className="py-2">Key not found / wrong key</td>
               </tr>
               <tr className="border-b border-slate-800">
-                <td className="py-2 pr-4 font-mono text-white">api_key_revoked</td>
+                <td className="py-2 pr-4 font-mono text-slate-900 dark:text-white">api_key_revoked</td>
                 <td className="py-2 pr-4">401</td>
                 <td className="py-2">Key was revoked in Settings → API</td>
               </tr>
               <tr className="border-b border-slate-800">
-                <td className="py-2 pr-4 font-mono text-white">api_key_expired</td>
+                <td className="py-2 pr-4 font-mono text-slate-900 dark:text-white">api_key_expired</td>
                 <td className="py-2 pr-4">401</td>
                 <td className="py-2">Key reached its expiry time</td>
               </tr>
               <tr className="border-b border-slate-800">
-                <td className="py-2 pr-4 font-mono text-white">validation_error</td>
+                <td className="py-2 pr-4 font-mono text-slate-900 dark:text-white">validation_error</td>
                 <td className="py-2 pr-4">400</td>
                 <td className="py-2">Missing required fields, invalid phone/timezone/date</td>
               </tr>
               <tr className="border-b border-slate-800">
-                <td className="py-2 pr-4 font-mono text-white">missing_outbound_line</td>
+                <td className="py-2 pr-4 font-mono text-slate-900 dark:text-white">missing_outbound_line</td>
                 <td className="py-2 pr-4">400</td>
                 <td className="py-2">No Vapi outbound line configured for calling</td>
               </tr>
               <tr className="border-b border-slate-800">
-                <td className="py-2 pr-4 font-mono text-white">invalid_state</td>
+                <td className="py-2 pr-4 font-mono text-slate-900 dark:text-white">invalid_state</td>
                 <td className="py-2 pr-4">400</td>
                 <td className="py-2">Trying to update a reminder that can’t be edited</td>
               </tr>
               <tr className="border-b border-slate-800">
-                <td className="py-2 pr-4 font-mono text-white">not_found</td>
+                <td className="py-2 pr-4 font-mono text-slate-900 dark:text-white">not_found</td>
                 <td className="py-2 pr-4">404</td>
                 <td className="py-2">Reminder/execution doesn’t exist for this user</td>
               </tr>
               <tr>
-                <td className="py-2 pr-4 font-mono text-white">internal_error</td>
+                <td className="py-2 pr-4 font-mono text-slate-900 dark:text-white">internal_error</td>
                 <td className="py-2 pr-4">500</td>
                 <td className="py-2">Unexpected error; retry with backoff</td>
               </tr>
@@ -404,7 +402,7 @@ ${BASE}/api/public/v1`,
                 <th className="pb-2">Type</th>
               </tr>
             </thead>
-            <tbody className="text-slate-300">
+            <tbody className="text-slate-700 dark:text-slate-300">
               <tr className="border-b border-slate-800">
                 <td className="py-2 pr-4 font-mono">user.id</td>
                 <td className="py-2">string</td>
@@ -477,7 +475,7 @@ print(res.json()["user"]["email"])`,
                 <th className="pb-2">Description</th>
               </tr>
             </thead>
-            <tbody className="text-slate-300">
+            <tbody className="text-slate-700 dark:text-slate-300">
               <tr className="border-b border-slate-800">
                 <td className="py-2 pr-4 font-mono">status</td>
                 <td className="py-2 pr-4">string</td>
@@ -564,30 +562,30 @@ items = res.json()["items"]`,
                 <th className="pb-2">Description</th>
               </tr>
             </thead>
-            <tbody className="text-slate-300">
+            <tbody className="text-slate-700 dark:text-slate-300">
               <tr className="border-b border-slate-800">
                 <td className="py-2 pr-4 font-mono">title</td>
-                <td className="py-2 pr-4 text-white">Yes</td>
+                <td className="py-2 pr-4 text-slate-900 dark:text-white">Yes</td>
                 <td className="py-2">Short reminder title (max 255 chars)</td>
               </tr>
               <tr className="border-b border-slate-800">
                 <td className="py-2 pr-4 font-mono">message</td>
-                <td className="py-2 pr-4 text-white">Yes</td>
+                <td className="py-2 pr-4 text-slate-900 dark:text-white">Yes</td>
                 <td className="py-2">Message spoken during the call (max 1000 chars)</td>
               </tr>
               <tr className="border-b border-slate-800">
                 <td className="py-2 pr-4 font-mono">phone_number</td>
-                <td className="py-2 pr-4 text-white">Yes</td>
+                <td className="py-2 pr-4 text-slate-900 dark:text-white">Yes</td>
                 <td className="py-2">E.164 format, e.g. +14155552671</td>
               </tr>
               <tr className="border-b border-slate-800">
                 <td className="py-2 pr-4 font-mono">scheduled_at</td>
-                <td className="py-2 pr-4 text-white">Yes</td>
+                <td className="py-2 pr-4 text-slate-900 dark:text-white">Yes</td>
                 <td className="py-2">Local datetime string (future)</td>
               </tr>
               <tr className="border-b border-slate-800">
                 <td className="py-2 pr-4 font-mono">timezone</td>
-                <td className="py-2 pr-4 text-white">Yes</td>
+                <td className="py-2 pr-4 text-slate-900 dark:text-white">Yes</td>
                 <td className="py-2">IANA timezone, e.g. America/New_York</td>
               </tr>
               <tr className="border-b border-slate-800">
@@ -843,7 +841,7 @@ reminder = res.json()`,
                 <th className="pb-2">Description</th>
               </tr>
             </thead>
-            <tbody className="text-slate-300">
+            <tbody className="text-slate-700 dark:text-slate-300">
               <tr className="border-b border-slate-800">
                 <td className="py-2 pr-4 font-mono">date_from</td>
                 <td className="py-2 pr-4">string</td>
@@ -949,19 +947,19 @@ function CodePanel({
   }
 
   return (
-    <div className="rounded-xl border border-slate-700 bg-[#0b1222] overflow-hidden">
-      <div className="flex items-center justify-between border-b border-slate-700 bg-[#0d1527] px-4 py-2">
+    <div className="rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-[#0b1222] overflow-hidden">
+      <div className="flex items-center justify-between border-b border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-[#0d1527] px-4 py-2">
         <div className="relative" ref={dropdownRef}>
           <button
             type="button"
             onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="inline-flex items-center gap-1.5 text-xs text-slate-200 hover:text-white"
+            className="inline-flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white"
           >
             {currentLabel}
             <ChevronDown className="h-3 w-3" />
           </button>
           {dropdownOpen && (
-            <div className="absolute left-0 top-full mt-1 z-10 rounded-lg border border-slate-700 bg-[#111b33] py-1 shadow-xl min-w-[140px]">
+            <div className="absolute left-0 top-full mt-1 z-10 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#111b33] py-1 shadow-xl min-w-[140px]">
               {LANGUAGES.filter((l) => code[l.key]).map((l) => (
                 <button
                   key={l.key}
@@ -969,7 +967,7 @@ function CodePanel({
                   className={`w-full text-left px-3 py-1.5 text-xs transition ${
                     l.key === effectiveLanguage
                       ? "text-cyan-200 bg-cyan-500/15"
-                      : "text-slate-300 hover:bg-slate-700/50 hover:text-white"
+                      : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-white"
                   }`}
                   onClick={() => {
                     setLanguage(l.key);
@@ -988,12 +986,12 @@ function CodePanel({
         <button
           type="button"
           onClick={handleCopy}
-          className="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-white"
+          className="inline-flex items-center gap-1 text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
         >
           {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
         </button>
       </div>
-      <pre className="p-4 text-[13px] leading-relaxed overflow-x-auto text-slate-200 max-h-[480px] overflow-y-auto">
+      <pre className="p-4 text-[13px] leading-relaxed overflow-x-auto text-slate-800 dark:text-slate-200 max-h-[480px] overflow-y-auto bg-white dark:bg-transparent">
         <code>{snippet}</code>
       </pre>
     </div>
@@ -1051,43 +1049,25 @@ export default function ApiDocsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0f1c] text-slate-100">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#0a0f1c] text-slate-900 dark:text-slate-100">
       <Header />
 
       <div className="mx-auto max-w-[1600px] grid grid-cols-1 lg:grid-cols-[240px_minmax(0,1fr)] min-h-[calc(100vh-64px)]">
         {/* Sidebar */}
-        <aside className="hidden lg:block border-r border-slate-800 bg-[radial-gradient(circle_at_top_left,#18233f_0%,#0c1120_35%,#090d18_100%)] px-4 py-4 sticky top-16 self-start max-h-[calc(100vh-64px)] overflow-y-auto [scrollbar-width:thin] [scrollbar-color:#334155_transparent]">
-          <div className="mb-4 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <BookOpen className="h-4 w-4 text-cyan-300" />
-              <span className="text-sm font-semibold text-white">dialcues API</span>
-            </div>
-            <button
-              type="button"
-              className="h-7 w-7 rounded-full border border-indigo-400/40 bg-indigo-500/15 text-indigo-200 inline-flex items-center justify-center"
-              aria-label="Theme indicator"
-            >
-              <MoonStar className="h-3.5 w-3.5" />
-            </button>
+        <aside className="hidden lg:block border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-[radial-gradient(circle_at_top_left,#18233f_0%,#0c1120_35%,#090d18_100%)] px-4 py-4 sticky top-16 self-start h-[calc(100vh-64px)] max-h-[calc(100vh-64px)] overflow-y-auto [scrollbar-width:thin] [scrollbar-color:#334155_transparent]">
+          <div className="mb-4 flex items-center gap-2">
+            <BookOpen className="h-4 w-4 text-cyan-500 dark:text-cyan-300" />
+            <span className="text-sm font-semibold text-slate-900 dark:text-white">dialcues API</span>
           </div>
 
-          <div className="flex items-center gap-2 mb-4">
-            <div className="relative flex-1">
-              <Search className="h-3.5 w-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500" />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Find anything"
-                className="w-full rounded-md border border-slate-700 bg-[#0a0f1c] pl-8 pr-3 py-1.5 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/40"
-              />
-            </div>
-            <button
-              type="button"
-              className="inline-flex items-center gap-1 rounded-md border border-slate-700 bg-[#111933] px-2 py-1.5 text-[11px] text-slate-200 hover:text-white"
-            >
-              <Sparkles className="h-3 w-3 text-cyan-300" />
-              Ask AI
-            </button>
+          <div className="relative mb-4">
+            <Search className="h-3.5 w-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Find anything"
+              className="w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0a0f1c] pl-8 pr-3 py-1.5 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/40"
+            />
           </div>
 
           <nav className="space-y-4">
@@ -1102,11 +1082,11 @@ export default function ApiDocsPage() {
                     onClick={() => toggleGroup(group.key)}
                     className="w-full flex items-center justify-between px-2 py-1.5 mb-1 text-left"
                   >
-                    <p className="text-[11px] uppercase tracking-wider text-slate-400">
+                    <p className="text-[11px] uppercase tracking-wider text-slate-600 dark:text-slate-400">
                       {group.label}
                     </p>
                     <ChevronDown
-                      className={`h-3.5 w-3.5 text-slate-500 transition ${isCollapsed ? "-rotate-90" : "rotate-0"}`}
+                      className={`h-3.5 w-3.5 text-slate-400 dark:text-slate-500 transition ${isCollapsed ? "-rotate-90" : "rotate-0"}`}
                     />
                   </button>
 
@@ -1117,7 +1097,7 @@ export default function ApiDocsPage() {
                       className={`block rounded-md px-2.5 py-1.5 text-[13px] transition ${
                         activeAnchor === section.id
                           ? "bg-gradient-to-r from-indigo-600/45 to-indigo-500/10 text-indigo-100 shadow-[inset_0_0_0_1px_rgba(129,140,248,0.35)]"
-                          : "text-slate-300 hover:text-white hover:bg-white/5"
+                          : "text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5"
                       }`}
                     >
                       {section.title}
@@ -1128,10 +1108,10 @@ export default function ApiDocsPage() {
             })}
           </nav>
 
-          <div className="mt-6 pt-4 border-t border-slate-800">
+          <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800">
             <Link
               href="/settings"
-              className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white"
+              className="inline-flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             >
               <ArrowLeft className="h-3 w-3" />
               Back to settings
@@ -1145,7 +1125,7 @@ export default function ApiDocsPage() {
           <div className="lg:hidden px-4 pt-4">
             <Link
               href="/settings"
-              className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-white"
+              className="inline-flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             >
               <ArrowLeft className="h-4 w-4" />
               Back to settings
@@ -1157,21 +1137,21 @@ export default function ApiDocsPage() {
               key={section.id}
               id={section.id}
               ref={(el) => { sectionRefs.current[section.id] = el; }}
-              className="border-b border-slate-800"
+              className="border-b border-slate-200 dark:border-slate-800"
             >
               <div className="grid grid-cols-1 xl:grid-cols-2 min-h-0">
                 {/* Left: prose */}
-                <div className="px-6 lg:px-10 py-8 xl:border-r xl:border-slate-800">
-                  <h2 className="text-xl font-display font-bold text-white mb-4">
+                <div className="px-6 lg:px-10 py-8 xl:border-r xl:border-slate-200 dark:xl:border-slate-800">
+                  <h2 className="text-xl font-display font-bold text-slate-900 dark:text-white mb-4">
                     {section.title}
                   </h2>
-                  <div className="prose-sm text-slate-300 leading-relaxed">
+                  <div className="prose-sm text-slate-700 dark:text-slate-300 leading-relaxed">
                     {section.prose}
                   </div>
                 </div>
 
                 {/* Right: code */}
-                <div className="px-6 lg:px-8 py-8 bg-[#080e1a]">
+                <div className="px-6 lg:px-8 py-8 bg-slate-100 dark:bg-[#080e1a]">
                   <CodePanel
                     code={section.code}
                     language={language}
