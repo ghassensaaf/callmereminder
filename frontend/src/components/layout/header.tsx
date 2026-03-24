@@ -17,6 +17,7 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const isSettingsPage = pathname.startsWith("/settings");
+  const isDocsPage = pathname.startsWith("/docs");
 
   const { data: settings } = useQuery({
     queryKey: ["settings"],
@@ -84,6 +85,9 @@ export function Header() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-1">
+            <NavLink href="/docs/api" active={isDocsPage}>
+              Docs
+            </NavLink>
             {session && (
               <>
                 <NavLink href="/dashboard" active={pathname === "/dashboard"}>
@@ -196,6 +200,18 @@ export function Header() {
                 History
               </Link>
               <Link
+                href="/docs/api"
+                onClick={closeMobileMenu}
+                className={cn(
+                  "flex items-center gap-3 px-4 py-3 rounded-xl font-medium",
+                  isDocsPage
+                    ? "text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-950/40"
+                    : "text-surface-700 dark:text-surface-200 hover:bg-surface-100 dark:hover:bg-surface-800"
+                )}
+              >
+                Docs
+              </Link>
+              <Link
                 href="/settings"
                 onClick={closeMobileMenu}
                 className={cn(
@@ -218,6 +234,18 @@ export function Header() {
             </>
           ) : (
             <>
+              <Link
+                href="/docs/api"
+                onClick={closeMobileMenu}
+                className={cn(
+                  "flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium",
+                  isDocsPage
+                    ? "text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-950/40"
+                    : "text-surface-700 dark:text-surface-200 hover:bg-surface-100 dark:hover:bg-surface-800"
+                )}
+              >
+                Docs
+              </Link>
               <Link
                 href="/login"
                 onClick={closeMobileMenu}

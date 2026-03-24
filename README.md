@@ -166,6 +166,7 @@ REST examples (all cookie-authenticated unless noted):
 
 - Guide: `docs/public-api.md`
 - OpenAPI spec: `docs/public-api.openapi.yaml`
+- Frontend docs page: `/docs/api` (searchable)
 
 ---
 

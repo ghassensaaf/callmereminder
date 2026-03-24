@@ -25,6 +25,7 @@ model User {
   teamMemberships     TeamMember[]
   invitationsSent     Invitation[]       @relation("InvitationInviter")
   publicApiKeys       PublicApiKey[]
+  publicApiRequests   PublicApiRequest[]
   @@unique([email])
   @@map("user")
 }
@@ -78,6 +79,7 @@ model Organization {
   vapiConfigs VapiConfig[]
   reminderTemplates ReminderTemplate[]
   publicApiKeys PublicApiKey[]
+  publicApiRequests PublicApiRequest[]
 
   @@map("organization")
 }
@@ -95,12 +97,35 @@ model PublicApiKey {
   createdAt      DateTime     @default(now()) @map("created_at")
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  requests       PublicApiRequest[]
 
   @@unique([keyHash])
   @@index([organizationId])
   @@index([userId])
   @@index([revokedAt])
   @@map("public_api_keys")
+}
+
+model PublicApiRequest {
+  id             Int          @id @default(autoincrement())
+  publicApiKeyId String       @map("public_api_key_id")
+  organizationId String       @map("organization_id")
+  userId         String       @map("user_id")
+  method         String       @db.VarChar(8)
+  path           String       @db.VarChar(180)
+  statusCode     Int          @map("status_code")
+  durationMs     Int          @map("duration_ms")
+  errorCode      String?      @map("error_code") @db.VarChar(80)
+  createdAt      DateTime     @default(now()) @map("created_at")
+  apiKey         PublicApiKey @relation(fields: [publicApiKeyId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([publicApiKeyId, createdAt])
+  @@index([organizationId, createdAt])
+  @@index([statusCode, createdAt])
+  @@index([path, createdAt])
+  @@map("public_api_requests")
 }
 
 model Member {

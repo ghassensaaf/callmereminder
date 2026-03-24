@@ -74,6 +74,7 @@ Small, high-leverage improvements; not a new “phase” but worth tracking.
 
 - Added versioned REST endpoints under `GET/POST/PATCH/DELETE /api/public/v1/*`
 - Added API key model + key management routes for owners/admins (`/api/public-api-keys`)
+- Added API usage telemetry + advanced metrics (latency percentiles, status/error breakdowns, endpoint/time-series views)
 - Added developer docs and OpenAPI spec (`docs/public-api.md`, `docs/public-api.openapi.yaml`)
 
 *Natural order:* ship Phase 2 or a stable “BYO + API” slice first so the API contract matches production behavior.

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Settings, Phone, Building2, Sparkles, FileText } from "lucide-react";
+import { Settings, Phone, Building2, Sparkles, FileText, KeyRound } from "lucide-react";
 
 import { Header } from "@/components/layout";
 import { AuthGuard } from "@/components/auth-guard";
@@ -12,10 +12,11 @@ import {
   TemplatesSection,
   PromptSettingsSection,
   OrganizationSection,
+  PublicApiSection,
 } from "@/components/settings";
 import { Button } from "@/components/ui";
 
-type SettingsTab = "vapi" | "organization" | "prompt" | "templates";
+type SettingsTab = "vapi" | "organization" | "prompt" | "templates" | "api";
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>("vapi");
@@ -89,6 +90,15 @@ export default function SettingsPage() {
               >
                 Templates
               </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={activeTab === "api" ? "primary" : "outline"}
+                leftIcon={<KeyRound className="h-4 w-4" />}
+                onClick={() => setActiveTab("api")}
+              >
+                API
+              </Button>
             </div>
 
             <motion.div
@@ -101,6 +111,7 @@ export default function SettingsPage() {
               {activeTab === "organization" && <OrganizationSection />}
               {activeTab === "prompt" && <PromptSettingsSection />}
               {activeTab === "templates" && <TemplatesSection />}
+              {activeTab === "api" && <PublicApiSection />}
             </motion.div>
           </motion.div>
         </main>

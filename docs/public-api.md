@@ -13,6 +13,8 @@ API keys are managed from the private app API (session cookie auth), by org `own
 - `GET /api/public-api-keys`
 - `POST /api/public-api-keys`
 - `POST /api/public-api-keys/:id/revoke`
+- `GET /api/public-api-keys/metrics?days=7`
+- `GET /api/public-api-keys/:id/metrics?days=7`
 
 `POST /api/public-api-keys` request:
 
@@ -24,6 +26,11 @@ API keys are managed from the private app API (session cookie auth), by org `own
 ```
 
 Response includes `api_key` only once; store it securely.
+
+You can also manage keys and view live usage analytics from the frontend:
+
+- Settings -> API tab
+- In-app docs page: `/docs/api`
 
 ## 2) Public API base
 
@@ -249,3 +256,13 @@ Recommended handling:
 - Retry only on `internal_error` (with backoff)
 - Treat auth errors (`invalid_api_key`, `api_key_expired`, `api_key_revoked`) as non-retryable
 - Validate phone/timezone/required fields client-side to reduce 400s
+
+## 7) Usage metrics shape (key management API)
+
+`GET /api/public-api-keys/metrics?days=7` returns:
+
+- Totals: requests, success rate, p50/p95 latency
+- Status-code breakdown
+- Top endpoints (with error rate and p95)
+- Time series (hour/day buckets based on window size)
+- Top keys and top error codes (for org-level query)

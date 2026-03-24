@@ -2,6 +2,7 @@ import { Router } from "express";
 import prisma from "../lib/prisma.js";
 import { requireAuth, requireOrg, requireOrgRole } from "../middleware/auth.js";
 import { generateRawPublicApiKey, getPublicApiKeyPrefix, hashPublicApiKey } from "../lib/public-api-keys.js";
+import { getPublicApiMetrics } from "../services/public-api-metrics.js";
 
 const router = Router();
 
@@ -26,6 +27,20 @@ router.get("/", requireAuth, requireOrg, requireOrgRole("owner", "admin"), async
       orderBy: { createdAt: "desc" },
     });
     return res.json({ items: items.map(formatApiKey) });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ detail: err.message });
+  }
+});
+
+router.get("/metrics", requireAuth, requireOrg, requireOrgRole("owner", "admin"), async (req, res) => {
+  try {
+    const days = parseInt(req.query.days, 10) || 7;
+    const metrics = await getPublicApiMetrics({
+      organizationId: req.organizationId,
+      days,
+    });
+    return res.json(metrics);
   } catch (err) {
     console.error(err);
     return res.status(500).json({ detail: err.message });
@@ -95,6 +110,32 @@ router.post("/:id/revoke", requireAuth, requireOrg, requireOrgRole("owner", "adm
       data: { revokedAt: new Date() },
     });
     return res.json(formatApiKey(updated));
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ detail: err.message });
+  }
+});
+
+router.get("/:id/metrics", requireAuth, requireOrg, requireOrgRole("owner", "admin"), async (req, res) => {
+  try {
+    const id = req.params.id;
+    const days = parseInt(req.query.days, 10) || 7;
+    const existing = await prisma.publicApiKey.findFirst({
+      where: {
+        id,
+        organizationId: req.organizationId,
+      },
+      select: { id: true },
+    });
+    if (!existing) {
+      return res.status(404).json({ detail: "API key not found" });
+    }
+    const metrics = await getPublicApiMetrics({
+      organizationId: req.organizationId,
+      keyId: id,
+      days,
+    });
+    return res.json(metrics);
   } catch (err) {
     console.error(err);
     return res.status(500).json({ detail: err.message });

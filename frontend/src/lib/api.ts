@@ -12,6 +12,11 @@ import {
   VapiConfigDto,
   VapiConfigListResponse,
 } from "@/types/vapi-config";
+import {
+  PublicApiKeysListResponse,
+  PublicApiMetricsResponse,
+  PublicApiKeyItem,
+} from "@/types/public-api";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -231,6 +236,29 @@ export const settingsApi = {
       };
       provider: "openrouter" | "fallback-template";
     };
+  },
+};
+
+export const publicApiKeysApi = {
+  list: async (): Promise<PublicApiKeysListResponse> => {
+    const response = await api.get("/api/public-api-keys");
+    return response.data;
+  },
+  create: async (data: { name: string; expires_at?: string }): Promise<PublicApiKeyItem & { api_key: string }> => {
+    const response = await api.post("/api/public-api-keys", data);
+    return response.data;
+  },
+  revoke: async (id: string): Promise<PublicApiKeyItem> => {
+    const response = await api.post(`/api/public-api-keys/${id}/revoke`);
+    return response.data;
+  },
+  metricsOverview: async (days = 7): Promise<PublicApiMetricsResponse> => {
+    const response = await api.get("/api/public-api-keys/metrics", { params: { days } });
+    return response.data;
+  },
+  metricsForKey: async (id: string, days = 7): Promise<PublicApiMetricsResponse> => {
+    const response = await api.get(`/api/public-api-keys/${id}/metrics`, { params: { days } });
+    return response.data;
   },
 };
 

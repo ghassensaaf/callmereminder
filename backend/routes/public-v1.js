@@ -1,6 +1,7 @@
 import { Router } from "express";
 import prisma from "../lib/prisma.js";
 import { requirePublicApiKey } from "../middleware/public-api-auth.js";
+import { capturePublicApiUsage } from "../middleware/public-api-usage.js";
 import { E164_REGEX, STATUSES, toUtc, formatReminder } from "../lib/utils.js";
 import { assertOrResolveVapiLine, userHasOutboundLine } from "../lib/vapi-integration.js";
 import { publicApiError } from "../lib/public-api-response.js";
@@ -55,6 +56,7 @@ function formatExecution(e) {
 }
 
 router.use(requirePublicApiKey);
+router.use(capturePublicApiUsage);
 
 router.get("/me", async (req, res) => {
   return res.json({
