@@ -6,7 +6,12 @@
     "start": "node index.js",
     "dev": "node --watch index.js",
     "postinstall": "prisma generate",
-    "db:push": "prisma db push"
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "prisma db seed"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   },
   "dependencies": {
     "@better-auth/infra": "^0.1.11",

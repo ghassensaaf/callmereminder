@@ -294,3 +294,91 @@ model PromptProfile {
   @@index([organizationId])
   @@map("prompt_profiles")
 }
+
+// ─── Blog System ────────────────────────────────────────────────────────────
+
+enum BlogPostStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum BlogTopicStatus {
+  PENDING
+  GENERATED
+  SKIPPED
+}
+
+model BlogPost {
+  id              String         @id @default(cuid())
+  title           String         @db.VarChar(300)
+  slug            String         @unique @db.VarChar(300)
+  excerpt         String         @db.Text
+  contentMd       String         @map("content_md") @db.Text
+  metaTitle       String         @map("meta_title") @db.VarChar(200)
+  metaDescription String         @map("meta_description") @db.VarChar(500)
+  targetKeyword   String         @map("target_keyword") @db.VarChar(200)
+  status          BlogPostStatus @default(DRAFT)
+  readingTime     Int            @default(0) @map("reading_time")
+  publishedAt     DateTime?      @map("published_at")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+  topicId         String?        @map("topic_id")
+  topic           BlogTopic?     @relation(fields: [topicId], references: [id], onDelete: SetNull)
+  tags            BlogPostTag[]
+
+  @@index([status, publishedAt])
+  @@index([topicId])
+  @@map("blog_posts")
+}
+
+model BlogTag {
+  id        String        @id @default(cuid())
+  name      String        @db.VarChar(100)
+  slug      String        @unique @db.VarChar(100)
+  createdAt DateTime      @default(now()) @map("created_at")
+  posts     BlogPostTag[]
+
+  @@map("blog_tags")
+}
+
+model BlogPostTag {
+  postId String   @map("post_id")
+  tagId  String   @map("tag_id")
+  post   BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag    BlogTag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([postId, tagId])
+  @@index([tagId])
+  @@map("blog_post_tags")
+}
+
+model BlogTopic {
+  id              String          @id @default(cuid())
+  keyword         String          @db.VarChar(300)
+  audience        String?         @db.VarChar(200)
+  searchIntent    String?         @map("search_intent") @db.VarChar(200)
+  priority        Int             @default(5)
+  status          BlogTopicStatus @default(PENDING)
+  lastGeneratedAt DateTime?       @map("last_generated_at")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+  posts           BlogPost[]
+  logs            BlogGenerationLog[]
+
+  @@index([status, priority])
+  @@map("blog_topics")
+}
+
+model BlogGenerationLog {
+  id        String    @id @default(cuid())
+  topicId   String    @map("topic_id")
+  provider  String    @db.VarChar(50)
+  model     String    @db.VarChar(100)
+  success   Boolean   @default(false)
+  error     String?   @db.Text
+  createdAt DateTime  @default(now()) @map("created_at")
+  topic     BlogTopic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@index([topicId, createdAt])
+  @@map("blog_generation_logs")
+}

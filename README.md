@@ -102,10 +102,12 @@ callMeReminder/
 ├── backend/
 │   ├── index.js              # Express, CORS, Better Auth at /api/auth/*
 │   ├── auth.js               # Better Auth: email/password, verification, reset, org plugin, Resend
-│   ├── prisma/schema.prisma  # User, Session, Organization, Member, Invitation, Reminder, VapiConfig, PromptProfile, …
-│   ├── routes/               # reminders, stats, settings, vapi-configs, templates, …
+│   ├── prisma/schema.prisma  # User, Session, Organization, Member, Invitation, Reminder, VapiConfig, PromptProfile, Blog*, …
+│   ├── prisma/seed.js        # Blog topic seed data (30 topics)
+│   ├── routes/               # reminders, stats, settings, vapi-configs, templates, blog, …
 │   ├── services/             # scheduler, vapi, prompt-generator, email (Resend)
-│   ├── middleware/           # requireAuth, requireOrg, requireOrgRole
+│   ├── lib/ai/               # Pluggable AI provider abstraction (Gemini, OpenRouter) + blog generator
+│   ├── middleware/           # requireAuth, requireOrg, requireOrgRole, requirePlatformAdmin
 │   └── .example.env
 │
 ├── ROADMAP.md
@@ -219,3 +221,98 @@ REST examples (all cookie-authenticated unless noted):
 - **Colors:** Primary `#2563eb`, Secondary `#06b6d4`, Accent `#22c55e`, Dark `#0f172a`, Light `#f8fafc`
 - **Fonts:** Outfit (body), Space Grotesk (headings), JetBrains Mono (code)
 - **Components:** `frontend/src/components/ui/`
+
+---
+
+## Blog & Content System
+
+AI-powered blog draft generation with manual review, SEO optimization, and programmatic landing pages.
+
+### Setup
+
+1. **Run migration** (from `backend/`):
+   ```bash
+   npx prisma migrate dev
+   ```
+
+2. **Seed topics** (30 pre-built high-intent topics):
+   ```bash
+   npx prisma db seed
+   ```
+
+3. **Configure env vars** (add to `backend/.env`):
+   ```
+   AI_PROVIDER=gemini
+   AI_MODEL=gemini-2.0-flash
+   AI_API_KEY=your-gemini-api-key
+   BLOG_ADMIN_EMAILS=you@example.com
+   BLOG_CRON_SECRET=your-random-secret
+   ```
+
+4. **Configure frontend env** (add to `frontend/.env.local`):
+   ```
+   NEXT_PUBLIC_BLOG_ADMIN_EMAILS=you@example.com
+   ```
+
+### How to generate drafts
+
+**Manual (admin UI):** Go to `/admin/blog` → Topics tab → click "Generate" on a pending topic.
+
+**Cron endpoint:**
+```bash
+curl -X POST http://localhost:8000/api/blog/cron/generate-daily \
+  -H "x-cron-secret: your-random-secret"
+```
+Set `BLOG_AUTO_GENERATION_ENABLED=true` in env for the cron endpoint to work.
+
+### Review and publish
+
+1. Go to `/admin/blog` → Posts tab → filter by "DRAFT"
+2. Click "Edit" to review/edit content, metadata, and tags
+3. Click "Publish" when ready — only published posts appear on `/blog`
+
+### Switching AI providers
+
+Change `AI_PROVIDER` and `AI_API_KEY` in your `.env`:
+- **Gemini free tier:** `AI_PROVIDER=gemini`, `AI_MODEL=gemini-2.0-flash`
+- **OpenRouter (free models):** `AI_PROVIDER=openrouter`, `AI_MODEL=meta-llama/llama-3.1-8b-instruct:free`
+- To add a new provider: create `backend/lib/ai/providers/your-provider.js` and register it in `backend/lib/ai/provider.js`
+
+### Routes
+
+| Route | Description |
+|-------|-------------|
+| `/blog` | Blog index (published posts) |
+| `/blog/:slug` | Individual blog post |
+| `/blog/tag/:tag` | Posts filtered by tag |
+| `/admin/blog` | Admin dashboard (requires platform admin) |
+| `/admin/blog/edit/:id` | Edit individual post |
+| `/phone-reminder-for-medication` | SEO landing page |
+| `/phone-reminder-for-appointments` | SEO landing page |
+| `/phone-reminder-for-seniors` | SEO landing page |
+| `/phone-reminder-for-students` | SEO landing page |
+| `/wake-up-call-reminder` | SEO landing page |
+| `/rss.xml` | RSS feed |
+| `/sitemap.xml` | Sitemap (includes blog + landing pages) |
+
+### API endpoints
+
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| `GET /api/blog/posts` | Public | List published posts |
+| `GET /api/blog/posts/slug/:slug` | Public | Get post by slug |
+| `GET /api/blog/posts/slug/:slug/related` | Public | Related posts |
+| `GET /api/blog/tags` | Public | List all tags |
+| `GET /api/blog/tags/:slug/posts` | Public | Posts by tag |
+| `GET /api/blog/admin/posts` | Admin | List all posts (any status) |
+| `GET /api/blog/admin/posts/:id` | Admin | Get post by ID |
+| `PUT /api/blog/admin/posts/:id` | Admin | Update post |
+| `POST /api/blog/admin/posts/:id/publish` | Admin | Publish post |
+| `POST /api/blog/admin/posts/:id/unpublish` | Admin | Unpublish post |
+| `DELETE /api/blog/admin/posts/:id` | Admin | Delete post |
+| `POST /api/blog/admin/posts/:id/regenerate-meta` | Admin | Regenerate SEO metadata |
+| `GET /api/blog/admin/topics` | Admin | List topics |
+| `POST /api/blog/admin/topics` | Admin | Create topic |
+| `POST /api/blog/admin/generate/:topicId` | Admin | Generate draft from topic |
+| `GET /api/blog/admin/logs` | Admin | Generation logs |
+| `POST /api/blog/cron/generate-daily` | Cron secret | Auto-generate one draft |

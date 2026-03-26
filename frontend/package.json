@@ -10,6 +10,7 @@
     },
     "dependencies": {
         "@hookform/resolvers": "^3.3.4",
+        "@tailwindcss/typography": "^0.5.19",
         "@tanstack/react-query": "^5.17.19",
         "@vercel/analytics": "^2.0.1",
         "@vercel/speed-insights": "^2.0.0",
@@ -27,6 +28,9 @@
         "react-hook-form": "^7.50.1",
         "react-hot-toast": "^2.4.1",
         "react-international-phone": "^4.7.0",
+        "react-markdown": "^10.1.0",
+        "rehype-sanitize": "^6.0.0",
+        "remark-gfm": "^4.0.1",
         "tailwind-merge": "^2.2.1",
         "zod": "^3.22.4"
     },

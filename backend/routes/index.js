@@ -7,6 +7,7 @@ import vapiServerRouter from "./vapi-server.js";
 import vapiConfigsRouter from "./vapi-configs.js";
 import publicV1Router from "./public-v1.js";
 import publicApiKeysRouter from "./public-api-keys.js";
+import blogRouter from "./blog.js";
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.use("/stats", statsRouter);
 router.use("/settings", settingsRouter);
 router.use("/public/v1", publicV1Router);
 router.use("/public-api-keys", publicApiKeysRouter);
+router.use("/blog", blogRouter);
 
 export default router;
