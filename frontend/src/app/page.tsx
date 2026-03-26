@@ -32,6 +32,11 @@ export default function LandingPage() {
               </span>
             </Link>
             <nav className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+              <Link href="/blog">
+                <Button variant="ghost" size="sm" className="text-sm">
+                  Blog
+                </Button>
+              </Link>
               <Link href="/docs/api">
                 <Button variant="ghost" size="sm" className="text-sm">
                   Docs
@@ -132,6 +137,12 @@ export default function LandingPage() {
             © {new Date().getFullYear()} Dialcues. All rights reserved.
           </span>
           <div className="flex gap-6">
+            <Link
+              href="/blog"
+              className="text-sm text-surface-500 dark:text-surface-400 hover:text-primary-600 dark:hover:text-primary-400"
+            >
+              Blog
+            </Link>
             <Link
               href="/docs/api"
               className="text-sm text-surface-500 dark:text-surface-400 hover:text-primary-600 dark:hover:text-primary-400"

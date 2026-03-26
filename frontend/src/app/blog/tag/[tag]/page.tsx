@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BlogHeader } from "@/components/blog/BlogHeader";
+import { BlogFooter } from "@/components/blog/BlogFooter";
 import { BlogBreadcrumbs } from "@/components/blog/BlogBreadcrumbs";
 import { BlogCard } from "@/components/blog/BlogCard";
 import type { BlogTagPostsResponse } from "@/types/blog";
@@ -49,7 +50,7 @@ export default async function BlogTagPage({ params }: Props) {
   return (
     <>
       <BlogHeader />
-      <main className="mx-auto max-w-4xl px-4 sm:px-6 py-12">
+      <main className="mx-auto max-w-5xl px-4 sm:px-6 py-12">
         <BlogBreadcrumbs
           items={[
             { label: "Blog", href: "/blog" },
@@ -60,7 +61,7 @@ export default async function BlogTagPage({ params }: Props) {
         <h1 className="font-display text-3xl font-bold tracking-tight text-surface-900 dark:text-surface-50 mb-2">
           {data.tag.name}
         </h1>
-        <p className="text-surface-600 dark:text-surface-400 mb-10">
+        <p className="text-surface-500 dark:text-surface-400 mb-10">
           {data.total} {data.total === 1 ? "article" : "articles"}
         </p>
 
@@ -69,13 +70,14 @@ export default async function BlogTagPage({ params }: Props) {
             <p className="text-surface-500 dark:text-surface-400">No articles in this tag yet.</p>
           </div>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {data.posts.map((post) => (
               <BlogCard key={post.id} post={post} />
             ))}
           </div>
         )}
       </main>
+      <BlogFooter />
     </>
   );
 }
